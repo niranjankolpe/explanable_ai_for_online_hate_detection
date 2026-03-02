@@ -31,7 +31,7 @@ def preprocess_text(text_series: pd.Series) -> pd.Series:
     )
 
 # Main Training Pipeline
-def train_model():
+def main():
 
     print("Loading data...")
     df = load_data(DATA_PATH)
@@ -75,7 +75,7 @@ def train_model():
     print(classification_report(y_val, preds))
 
 if __name__ == "__main__":
-  train_model()
+  main()
 
 
 
