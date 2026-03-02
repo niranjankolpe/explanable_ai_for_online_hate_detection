@@ -8,6 +8,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 
+import joblib
+
 # Configuration
 DATA_PATH = "olid-training-v1.0.tsv"
 RANDOM_STATE = 42
@@ -51,6 +53,7 @@ def train_model():
         max_features=10000,
         ngram_range=(1, 2)
     )
+    joblib.dump(vectorizer, "tfidf_vectorizer.pkl")
 
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_val_tfidf = vectorizer.transform(X_val)
@@ -58,6 +61,7 @@ def train_model():
     print("Training Logistic Regression...")
     model = LogisticRegression(max_iter=1000)
     model.fit(X_train_tfidf, y_train)
+    joblib.dump(model, "baseline_model.pkl")
 
     print("Evaluating...")
     preds = model.predict(X_val_tfidf)
@@ -71,4 +75,7 @@ def train_model():
     print(classification_report(y_val, preds))
 
 if __name__ == "__main__":
-    train_model()
+  train_model()
+
+
+
