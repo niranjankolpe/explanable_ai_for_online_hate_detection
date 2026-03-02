@@ -1,0 +1,20 @@
+schema: '2.0'
+stages:
+  train:
+    cmd: python src/train_baseline.py
+    deps:
+    - path: data
+      hash: md5
+      md5: 86c965c9b86245c187a21e93af83896c.dir
+      size: 2192677
+      nfiles: 7
+    - path: src/train_baseline.py
+      hash: md5
+      md5: 75cb20c8d9fd783b87e7f6215717eed0
+      size: 2051
+    outs:
+    - path: models
+      hash: md5
+      md5: c1c95863fa0aa9de459ef3e39ddfb8fa.dir
+      size: 460344
+      nfiles: 2

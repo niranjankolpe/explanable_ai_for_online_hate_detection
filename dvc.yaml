@@ -1,0 +1,8 @@
+stages:
+  train:
+    cmd: python src/train_baseline.py
+    deps:
+    - data
+    - src/train_baseline.py
+    outs:
+    - models

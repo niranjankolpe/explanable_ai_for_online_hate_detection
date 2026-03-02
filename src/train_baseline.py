@@ -56,6 +56,7 @@ def main():
     
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_val_tfidf = vectorizer.transform(X_val)
+    os.makedirs("models", exist_ok=True)
     joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
 
     print("Training Logistic Regression...")
