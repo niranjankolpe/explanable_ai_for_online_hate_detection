@@ -11,7 +11,7 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report
 import joblib
 
 # Configuration
-DATA_PATH = "olid-training-v1.0.tsv"
+DATA_PATH = "data/olid-training-v1.0.tsv"
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 
@@ -53,15 +53,15 @@ def train_model():
         max_features=10000,
         ngram_range=(1, 2)
     )
-    joblib.dump(vectorizer, "tfidf_vectorizer.pkl")
-
+    
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_val_tfidf = vectorizer.transform(X_val)
+    joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
 
     print("Training Logistic Regression...")
     model = LogisticRegression(max_iter=1000)
     model.fit(X_train_tfidf, y_train)
-    joblib.dump(model, "baseline_model.pkl")
+    joblib.dump(model, "models/baseline_model.pkl")
 
     print("Evaluating...")
     preds = model.predict(X_val_tfidf)
