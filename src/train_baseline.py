@@ -60,7 +60,9 @@ def main():
     joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
 
     print("Training Logistic Regression...")
-    model = LogisticRegression(max_iter=1000)
+    model = LogisticRegression(
+        max_iter=1000,
+        class_weight='balanced')
     model.fit(X_train_tfidf, y_train)
     joblib.dump(model, "models/baseline_model.pkl")
 
