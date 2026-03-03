@@ -3,6 +3,8 @@ import joblib
 
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 
+import os
+import json
 
 # Configuration
 MODEL_PATH      = "models/baseline_model.pkl"
@@ -48,6 +50,16 @@ def main():
     print("\nClassification Report:")
     print(classification_report(y_true, preds))
 
+    # Save metrics
+    os.makedirs("reports", exist_ok=True)
+
+    metrics = {
+        "accuracy": float(acc),
+        "f1_weighted": float(f1)
+    }
+
+    with open("reports/metrics.json", "w") as f:
+        json.dump(metrics, f, indent=4)
 
 # Driver code
 if __name__ == "__main__":

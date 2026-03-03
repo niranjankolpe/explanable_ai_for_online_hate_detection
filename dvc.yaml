@@ -6,3 +6,11 @@ stages:
     - src/train_baseline.py
     outs:
     - models
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - data
+    - models
+    - src/evaluate.py
+    metrics:
+    - reports/metrics.json
