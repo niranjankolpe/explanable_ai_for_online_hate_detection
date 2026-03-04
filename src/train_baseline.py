@@ -56,15 +56,15 @@ def main():
     
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_val_tfidf = vectorizer.transform(X_val)
-    os.makedirs("models", exist_ok=True)
-    joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
+    os.makedirs("models/baseline", exist_ok=True)
+    joblib.dump(vectorizer, "models/baseline/tfidf_vectorizer.pkl")
 
     print("Training Logistic Regression...")
     model = LogisticRegression(
         max_iter=1000,
         class_weight='balanced')
     model.fit(X_train_tfidf, y_train)
-    joblib.dump(model, "models/baseline_model.pkl")
+    joblib.dump(model, "models/baseline/baseline_model.pkl")
 
     print("Evaluating...")
     preds = model.predict(X_val_tfidf)

@@ -12,8 +12,8 @@ from model_lstm import LSTMClassifier
 # Configuration
 TRAIN_PATH = "data/olid-training-v1.0.tsv"
 
-MODEL_PATH = "models/lstm_model.pt"
-VOCAB_PATH = "models/lstm_vocab.pkl"
+MODEL_PATH = "models/lstm/lstm_model.pt"
+VOCAB_PATH = "models/lstm/lstm_vocab.pkl"
 
 MAX_LEN = 50
 VOCAB_SIZE = 20000
@@ -93,7 +93,7 @@ def main():
 
     print("Saving model...")
 
-    os.makedirs("models", exist_ok=True)
+    os.makedirs("models/lstm", exist_ok=True)
 
     torch.save(model.state_dict(), MODEL_PATH)
 

@@ -5,7 +5,7 @@ stages:
     - data
     - src/train_baseline.py
     outs:
-    - models
+    - models/baseline
   evaluate:
     cmd: python src/evaluate.py
     deps:
@@ -14,3 +14,12 @@ stages:
     - src/evaluate.py
     metrics:
     - reports/metrics.json
+  train_lstm:
+    cmd: python src/train_lstm.py
+    deps:
+    - data/olid-training-v1.0.tsv
+    - src/dataset_lstm.py
+    - src/model_lstm.py
+    - src/train_lstm.py
+    outs:
+    - models/lstm

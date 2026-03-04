@@ -7,8 +7,8 @@ import os
 import json
 
 # Configuration
-MODEL_PATH      = "models/baseline_model.pkl"
-VECTORIZER_PATH = "models/tfidf_vectorizer.pkl"
+MODEL_PATH      = "models/baseline/baseline_model.pkl"
+VECTORIZER_PATH = "models/baseline/tfidf_vectorizer.pkl"
 TEST_PATH       = "data/testset-levela.tsv"
 LABELS_PATH     = "data/labels-levela.csv"
 
