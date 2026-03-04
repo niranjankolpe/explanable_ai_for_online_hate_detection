@@ -10,7 +10,8 @@ stages:
     cmd: python src/evaluate.py
     deps:
     - data
-    - models
+    - models/baseline
+    - models/lstm
     - src/evaluate.py
     metrics:
     - reports/metrics.json

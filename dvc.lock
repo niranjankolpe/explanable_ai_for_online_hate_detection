@@ -26,11 +26,16 @@ stages:
       md5: 86c965c9b86245c187a21e93af83896c.dir
       size: 2192677
       nfiles: 7
-    - path: models
+    - path: models/baseline
       hash: md5
-      md5: ec26a75926c3494e0d8aa5a49a43fea7.dir
-      size: 9197916
-      nfiles: 4
+      md5: d39c88d4e1e456c2b18470bc8bc0f4da.dir
+      size: 460360
+      nfiles: 2
+    - path: models/lstm
+      hash: md5
+      md5: 46963882ffb39ca94f2745db3975f044.dir
+      size: 8737556
+      nfiles: 2
     - path: src/evaluate.py
       hash: md5
       md5: 247ac96527abc45c4f5afc6d6e50ac7c
