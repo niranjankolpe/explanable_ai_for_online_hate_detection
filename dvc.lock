@@ -28,7 +28,7 @@ stages:
       nfiles: 7
     - path: models
       hash: md5
-      md5: a32876cc2bdc1e3c41f77eee4f8a7452.dir
+      md5: ec26a75926c3494e0d8aa5a49a43fea7.dir
       size: 9197916
       nfiles: 4
     - path: src/evaluate.py
@@ -40,3 +40,28 @@ stages:
       hash: md5
       md5: 8234fbf484b721a5aefe901df0b694eb
       size: 80
+  train_lstm:
+    cmd: python src/train_lstm.py
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/dataset_lstm.py
+      hash: md5
+      md5: 2188330a341c52b062329307f66fb9c4
+      size: 1693
+    - path: src/model_lstm.py
+      hash: md5
+      md5: 171b577932b51bda7012839f382cddc3
+      size: 1394
+    - path: src/train_lstm.py
+      hash: md5
+      md5: e784742c4d5403beb2705b4f584a04cb
+      size: 2203
+    outs:
+    - path: models/lstm
+      hash: md5
+      md5: 46963882ffb39ca94f2745db3975f044.dir
+      size: 8737556
+      nfiles: 2
