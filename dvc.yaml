@@ -22,5 +22,7 @@ stages:
     - src/dataset_lstm.py
     - src/model_lstm.py
     - src/train_lstm.py
+    params:
+    - lstm
     outs:
     - models/lstm

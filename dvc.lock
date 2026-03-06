@@ -33,7 +33,7 @@ stages:
       nfiles: 2
     - path: models/lstm
       hash: md5
-      md5: 46963882ffb39ca94f2745db3975f044.dir
+      md5: c137769e4507d8a2ff2f5ac5bbc2aa50.dir
       size: 8737556
       nfiles: 2
     - path: src/evaluate.py
@@ -43,7 +43,7 @@ stages:
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: 34a17cbfcd8b5fa62823b1fbc7dfae22
+      md5: aba1678029f377fee332a33b8c7e7237
       size: 221
   train_lstm:
     cmd: python src/train_lstm.py
@@ -62,11 +62,21 @@ stages:
       size: 1394
     - path: src/train_lstm.py
       hash: md5
-      md5: e784742c4d5403beb2705b4f584a04cb
-      size: 2203
+      md5: b82602e949fdbff4bcf70568e2308a0c
+      size: 2439
+    params:
+      params.yaml:
+        lstm:
+          vocab_size: 20000
+          embedding_dim: 100
+          hidden_dim: 128
+          max_len: 50
+          batch_size: 32
+          epochs: 5
+          learning_rate: 0.001
     outs:
     - path: models/lstm
       hash: md5
-      md5: 46963882ffb39ca94f2745db3975f044.dir
+      md5: c137769e4507d8a2ff2f5ac5bbc2aa50.dir
       size: 8737556
       nfiles: 2

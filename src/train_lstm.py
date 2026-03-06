@@ -8,6 +8,7 @@ import pickle
 from dataset_lstm import Vocabulary, OLIDDataset
 from model_lstm import LSTMClassifier
 
+import yaml
 
 # Configuration
 TRAIN_PATH = "data/olid-training-v1.0.tsv"
@@ -15,11 +16,16 @@ TRAIN_PATH = "data/olid-training-v1.0.tsv"
 MODEL_PATH = "models/lstm/lstm_model.pt"
 VOCAB_PATH = "models/lstm/lstm_vocab.pkl"
 
-MAX_LEN = 50
-VOCAB_SIZE = 20000
-BATCH_SIZE = 32
-EPOCHS = 5
-LEARNING_RATE = 0.001
+with open("params.yaml") as f:
+    params = yaml.safe_load(f)
+
+lstm_params = params["lstm"]
+
+MAX_LEN       = lstm_params["max_len"]
+VOCAB_SIZE    = lstm_params["vocab_size"]
+BATCH_SIZE    = lstm_params["batch_size"]
+EPOCHS        = lstm_params["epochs"]
+LEARNING_RATE = lstm_params["learning_rate"]
 
 
 def main():
