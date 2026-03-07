@@ -1,8 +1,8 @@
 lstm:
   vocab_size: 20000
   embedding_dim: 100
-  hidden_dim: 128
-  max_len: 50
-  batch_size: 32
+  hidden_dim: 256
+  max_len: 25
+  batch_size: 256
   epochs: 5
-  learning_rate: 0.001
+  learning_rate: 0.0001
