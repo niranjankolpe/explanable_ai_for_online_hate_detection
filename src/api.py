@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from .predict import load_model, predict
+from .predict import load_model, predict, predict_proba
+from .explain import explain_prediction
 
 app = FastAPI()
 
@@ -22,8 +23,16 @@ def classify(input: TextInput):
 
     label, confidence = predict(input.text, model, vocab)
 
+    explanation = explain_prediction(
+        input.text,
+        model,
+        vocab,
+        lambda texts: predict_proba(texts, model, vocab)
+    )
+
     return {
         "text": input.text,
         "label": label,
-        "confidence": confidence
+        "confidence": confidence,
+        "explanation": explanation
     }

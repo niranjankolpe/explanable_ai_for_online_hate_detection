@@ -55,6 +55,29 @@ def predict(text, model, vocab):
 
     return label, confidence.item()
 
+def predict_proba(texts, model, vocab):
+
+    # load params
+    with open("params.yaml") as f:
+        params = yaml.safe_load(f)
+
+    MAX_LEN = params["lstm"]["max_len"]
+
+    sequences = []
+
+    for text in texts:
+        tokens = text.lower().split()
+        seq = [vocab.get(t, 1) for t in tokens]
+        seq = pad_sequence(seq, MAX_LEN)
+        sequences.append(seq)
+
+    inputs = torch.tensor(sequences)
+
+    with torch.no_grad():
+        outputs = model(inputs)
+        probs = torch.softmax(outputs, dim=1).numpy()
+
+    return probs
 
 def main():
 
