@@ -15,8 +15,8 @@ stages:
     outs:
     - path: models/baseline
       hash: md5
-      md5: 4c5e871cd1e0fd613da5edde3851f25f.dir
-      size: 460360
+      md5: 7f9c2f267f74beb13719b06a16786ee1.dir
+      size: 460396
       nfiles: 2
   evaluate:
     cmd: python src/evaluate.py
@@ -28,22 +28,22 @@ stages:
       nfiles: 7
     - path: models/baseline
       hash: md5
-      md5: 4c5e871cd1e0fd613da5edde3851f25f.dir
-      size: 460360
+      md5: 7f9c2f267f74beb13719b06a16786ee1.dir
+      size: 460396
       nfiles: 2
     - path: models/lstm
       hash: md5
-      md5: 6cfb801689a804642ef6461326a83728.dir
-      size: 8737556
+      md5: d4e7c9e9c8de33fb4e67c8c89b5ebd76.dir
+      size: 13213521
       nfiles: 2
     - path: src/evaluate.py
       hash: md5
-      md5: b20e913326e57071f88ac3129b8add41
-      size: 2867
+      md5: 11f961b415fd5577c22f4da20d0ef7c6
+      size: 2999
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: c9c3275c215641194f6b1130d715f333
+      md5: fca1c5dff0b94408bdc1a06c0e76a56f
       size: 220
   train_lstm:
     cmd: python src/train_lstm.py
@@ -54,29 +54,29 @@ stages:
       size: 1975156
     - path: src/dataset_lstm.py
       hash: md5
-      md5: 2188330a341c52b062329307f66fb9c4
-      size: 1693
+      md5: 561173dbb983f5015fbb41f34a3cbf1e
+      size: 1869
     - path: src/model_lstm.py
       hash: md5
-      md5: 171b577932b51bda7012839f382cddc3
-      size: 1394
+      md5: cb63b0c1c6c773686aa5f9727168e7ab
+      size: 1434
     - path: src/train_lstm.py
       hash: md5
-      md5: b82602e949fdbff4bcf70568e2308a0c
-      size: 2439
+      md5: 9e7dc5d6c6251cba4254f7cc895404c4
+      size: 2542
     params:
       params.yaml:
         lstm:
           vocab_size: 20000
-          embedding_dim: 100
-          hidden_dim: 256
+          embedding_dim: 128
+          hidden_dim: 128
           max_len: 25
-          batch_size: 256
-          epochs: 5
-          learning_rate: 0.0001
+          batch_size: 64
+          epochs: 12
+          learning_rate: 0.0005
     outs:
     - path: models/lstm
       hash: md5
-      md5: 6cfb801689a804642ef6461326a83728.dir
-      size: 8737556
+      md5: d4e7c9e9c8de33fb4e67c8c89b5ebd76.dir
+      size: 13213521
       nfiles: 2

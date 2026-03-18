@@ -55,14 +55,17 @@ def main():
     print("Initializing model...")
 
     model = LSTMClassifier(
-        vocab_size=len(vocab.word2idx)
-    )
+    vocab_size=len(vocab.word2idx),
+    embedding_dim=128,
+    hidden_dim=128,
+    num_layers=2,
+    dropout=0.5)
 
     device = torch.device("cpu")
 
     model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(weight=torch.tensor([1.0, 2.0]))
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=LEARNING_RATE

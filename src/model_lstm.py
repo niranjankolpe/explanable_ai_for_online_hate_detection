@@ -9,8 +9,8 @@ class LSTMClassifier(nn.Module):
         vocab_size,
         embedding_dim=100,
         hidden_dim=128,
-        num_layers=1,
-        dropout=0.3,
+        num_layers=2,
+        dropout=0.5,
         num_classes=2
         ):
         super(LSTMClassifier, self).__init__()
@@ -27,32 +27,28 @@ class LSTMClassifier(nn.Module):
             input_size=embedding_dim,
             hidden_size=hidden_dim,
             num_layers=num_layers,
-            batch_first=True
+            batch_first=True,
+            dropout=dropout,
+            bidirectional=True
         )
 
         # Dropout layer
         self.dropout = nn.Dropout(dropout)
 
         # Final classification layer
-        self.fc = nn.Linear(hidden_dim, num_classes)
+        self.fc = nn.Sequential(
+            nn.Linear(hidden_dim * 2, 64),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(64, num_classes)
+        )
 
     def forward(self, x):
-
-        # x shape: (batch_size, seq_len)
-
         embedded = self.embedding(x)
-        # shape: (batch_size, seq_len, embedding_dim)
-
         lstm_out, (hidden, cell) = self.lstm(embedded)
-
-        # hidden shape: (num_layers, batch_size, hidden_dim)
-
-        last_hidden = hidden[-1]
-        # shape: (batch_size, hidden_dim)
-
-        dropped = self.dropout(last_hidden)
-
-        logits = self.fc(dropped)
-        # shape: (batch_size, num_classes)
-
+        hidden_forward = hidden[-2]
+        hidden_backward = hidden[-1]
+        hidden_cat = torch.cat((hidden_forward, hidden_backward), dim=1)
+        out = self.dropout(hidden_cat)
+        logits = self.fc(out)
         return logits

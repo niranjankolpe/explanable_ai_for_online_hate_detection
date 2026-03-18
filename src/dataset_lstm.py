@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import Dataset
 from collections import Counter
 
+import re
 
 class Vocabulary:
     def __init__(self, max_size=20000):
@@ -52,6 +53,10 @@ class OLIDDataset(Dataset):
 
     def __getitem__(self, idx):
         text = self.texts.iloc[idx].lower()
+        text = re.sub(r"http\S+", "", text)
+        text = re.sub(r"@\w+", "", text)
+        text = re.sub(r"[^a-zA-Z\s]", "", text)
+        text = text.strip()
 
         sequence = self.vocab.numericalize(text)
 

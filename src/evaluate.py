@@ -39,18 +39,23 @@ def evaluate_lstm(df):
     with open(LSTM_VOCAB_PATH, "rb") as f:
         vocab = pickle.load(f)
 
-    model = LSTMClassifier(vocab_size=len(vocab))
+    model = LSTMClassifier(
+    vocab_size=max(vocab.values()) + 1,
+    embedding_dim=128,
+    hidden_dim=128,
+    num_layers=2,
+    dropout=0.5)
     model.load_state_dict(torch.load(LSTM_MODEL_PATH))
     model.eval()
 
     X = df["tweet"].str.lower()
     y_true = df["label"].map(lambda x: 1 if x == "OFF" else 0)
 
-    sequences = []
+    sequences = list()
 
     for text in X:
         tokens = text.split()
-        seq = [vocab.get(t, 1) for t in tokens]
+        seq = [vocab[t] if t in vocab else vocab["<UNK>"] for t in tokens]
         seq = pad_sequence(seq, MAX_LEN)
         sequences.append(seq)
 
