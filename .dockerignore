@@ -6,3 +6,5 @@ venv/
 .dvc/config.local
 notebooks/
 docs/
+__pycache__/
+*.pyc

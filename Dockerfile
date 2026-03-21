@@ -4,9 +4,13 @@ WORKDIR /app
 
 COPY requirements-docker.txt .
 
-RUN pip install --no-cache-dir -r requirements-docker.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements-docker.txt && \
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
-COPY . .
+COPY src/ ./src/
+COPY models/ ./models/
+COPY params.yaml .
 
 EXPOSE 8000
 
