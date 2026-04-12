@@ -5,9 +5,9 @@ stages:
     deps:
     - path: data
       hash: md5
-      md5: 86c965c9b86245c187a21e93af83896c.dir
-      size: 2192677
-      nfiles: 7
+      md5: 9a89d952075278faac34cd87ebc7204f.dir
+      size: 2201916
+      nfiles: 9
     - path: src/train_baseline.py
       hash: md5
       md5: ee98f59f02370fc322ebd1e04b2b1a5d
@@ -15,25 +15,25 @@ stages:
     outs:
     - path: models/baseline
       hash: md5
-      md5: 7f9c2f267f74beb13719b06a16786ee1.dir
-      size: 460396
+      md5: 8c269a04035a22673351aeb360b3e179.dir
+      size: 460360
       nfiles: 2
   evaluate:
     cmd: python src/evaluate.py
     deps:
     - path: data
       hash: md5
-      md5: 86c965c9b86245c187a21e93af83896c.dir
-      size: 2192677
-      nfiles: 7
+      md5: 9a89d952075278faac34cd87ebc7204f.dir
+      size: 2201916
+      nfiles: 9
     - path: models/baseline
       hash: md5
-      md5: 7f9c2f267f74beb13719b06a16786ee1.dir
-      size: 460396
+      md5: 8c269a04035a22673351aeb360b3e179.dir
+      size: 460360
       nfiles: 2
     - path: models/lstm
       hash: md5
-      md5: d4e7c9e9c8de33fb4e67c8c89b5ebd76.dir
+      md5: 55cb434a89b4e41277b78d2bc110bd9a.dir
       size: 13213521
       nfiles: 2
     - path: src/evaluate.py
@@ -43,8 +43,8 @@ stages:
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: fca1c5dff0b94408bdc1a06c0e76a56f
-      size: 220
+      md5: 47982dd54a612ba68714661c1417d63c
+      size: 221
   train_lstm:
     cmd: python src/train_lstm.py
     deps:
@@ -54,22 +54,24 @@ stages:
       size: 1975156
     - path: src/dataset_lstm.py
       hash: md5
-      md5: 561173dbb983f5015fbb41f34a3cbf1e
-      size: 1869
+      md5: 5c2450dece160d92efba3040eadc5f54
+      size: 1967
     - path: src/model_lstm.py
       hash: md5
-      md5: cb63b0c1c6c773686aa5f9727168e7ab
-      size: 1434
+      md5: 1dd768049827204f34b444387148885b
+      size: 1322
     - path: src/train_lstm.py
       hash: md5
-      md5: 9e7dc5d6c6251cba4254f7cc895404c4
-      size: 2542
+      md5: 73ab7213bd30397462709ee79141633b
+      size: 2741
     params:
       params.yaml:
         lstm:
           vocab_size: 20000
           embedding_dim: 128
           hidden_dim: 128
+          num_layers: 2
+          dropout: 0.5
           max_len: 25
           batch_size: 64
           epochs: 12
@@ -77,6 +79,6 @@ stages:
     outs:
     - path: models/lstm
       hash: md5
-      md5: d4e7c9e9c8de33fb4e67c8c89b5ebd76.dir
-      size: 13213521
+      md5: 4f4683d65494dd0cc31e1c6c634f307c.dir
+      size: 13221603
       nfiles: 2

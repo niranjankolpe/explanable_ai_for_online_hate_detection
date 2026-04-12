@@ -7,7 +7,7 @@ class LSTMClassifier(nn.Module):
     def __init__(
         self,
         vocab_size,
-        embedding_dim=100,
+        embedding_dim=128,
         hidden_dim=128,
         num_layers=2,
         dropout=0.5,
@@ -15,14 +15,12 @@ class LSTMClassifier(nn.Module):
         ):
         super(LSTMClassifier, self).__init__()
 
-        # Word embeddings
         self.embedding = nn.Embedding(
             num_embeddings=vocab_size,
             embedding_dim=embedding_dim,
             padding_idx=0
         )
 
-        # LSTM layer
         self.lstm = nn.LSTM(
             input_size=embedding_dim,
             hidden_size=hidden_dim,
@@ -32,10 +30,8 @@ class LSTMClassifier(nn.Module):
             bidirectional=True
         )
 
-        # Dropout layer
         self.dropout = nn.Dropout(dropout)
 
-        # Final classification layer
         self.fc = nn.Sequential(
             nn.Linear(hidden_dim * 2, 64),
             nn.ReLU(),

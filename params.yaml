@@ -2,7 +2,16 @@ lstm:
   vocab_size: 20000
   embedding_dim: 128
   hidden_dim: 128
+  num_layers: 2
+  dropout: 0.5
   max_len: 25
   batch_size: 64
   epochs: 12
   learning_rate: 0.0005
+
+bert:
+  model_name: "distilbert-base-uncased"
+  max_len: 128
+  batch_size: 32
+  epochs: 1
+  learning_rate: 0.00002

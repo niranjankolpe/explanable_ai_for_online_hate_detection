@@ -6,15 +6,7 @@ stages:
     - src/train_baseline.py
     outs:
     - models/baseline
-  evaluate:
-    cmd: python src/evaluate.py
-    deps:
-    - data
-    - models/baseline
-    - models/lstm
-    - src/evaluate.py
-    metrics:
-    - reports/metrics.json
+
   train_lstm:
     cmd: python src/train_lstm.py
     deps:
@@ -26,3 +18,30 @@ stages:
     - lstm
     outs:
     - models/lstm
+
+  train_bert:
+    cmd: python src/train_bert.py
+    deps:
+    - data/olid-training-v1.0.tsv
+    - src/train_bert.py
+    params:
+    - bert
+    outs:
+    - models/bert
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - data
+    - models/baseline
+    - models/lstm
+    - models/bert
+    - src/evaluate.py
+    - src/model_lstm.py
+    - src/dataset_lstm.py
+    - src/predict_bert.py
+    params:
+    - lstm
+    - bert
+    metrics:
+    - reports/metrics.json

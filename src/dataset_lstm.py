@@ -1,9 +1,16 @@
-import pandas as pd
+import re
 import torch
 from torch.utils.data import Dataset
 from collections import Counter
 
-import re
+
+def preprocess(text):
+    text = str(text).lower()
+    text = re.sub(r"http\S+", "", text)
+    text = re.sub(r"@\w+", "", text)
+    text = re.sub(r"[^a-zA-Z\s]", "", text)
+    return text.strip()
+
 
 class Vocabulary:
     def __init__(self, max_size=20000):
@@ -13,9 +20,8 @@ class Vocabulary:
 
     def build_vocab(self, sentences):
         counter = Counter()
-
         for sentence in sentences:
-            tokens = sentence.split()
+            tokens = preprocess(sentence).split()  # preprocess before counting
             counter.update(tokens)
 
         most_common = counter.most_common(self.max_size - 2)
@@ -26,7 +32,6 @@ class Vocabulary:
 
     def numericalize(self, sentence):
         tokens = sentence.split()
-
         return [
             self.word2idx[token] if token in self.word2idx else self.word2idx["<UNK>"]
             for token in tokens
@@ -42,7 +47,7 @@ def pad_sequence(seq, max_len):
 
 
 class OLIDDataset(Dataset):
-    def __init__(self, text_series, label_series, vocab, max_len=50):
+    def __init__(self, text_series, label_series, vocab, max_len=25):  # fixed default
         self.texts = text_series
         self.labels = label_series
         self.vocab = vocab
@@ -52,16 +57,8 @@ class OLIDDataset(Dataset):
         return len(self.texts)
 
     def __getitem__(self, idx):
-        text = self.texts.iloc[idx].lower()
-        text = re.sub(r"http\S+", "", text)
-        text = re.sub(r"@\w+", "", text)
-        text = re.sub(r"[^a-zA-Z\s]", "", text)
-        text = text.strip()
-
+        text = preprocess(self.texts.iloc[idx])  # use shared preprocess()
         sequence = self.vocab.numericalize(text)
-
         padded = pad_sequence(sequence, self.max_len)
-
         label = 1 if self.labels.iloc[idx] == "OFF" else 0
-
         return torch.tensor(padded), torch.tensor(label)
