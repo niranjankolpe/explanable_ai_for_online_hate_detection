@@ -1,8 +1,11 @@
-fastapi
 joblib
 lime
+shap
 numpy
 pandas
 PyYAML
 scikit-learn
-uvicorn
+torch
+transformers
+torchvision
+streamlit

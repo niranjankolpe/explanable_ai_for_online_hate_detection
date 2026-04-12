@@ -5,8 +5,12 @@ import pickle
 
 import torch
 
-from .model_lstm import LSTMClassifier
-from .dataset_lstm import pad_sequence, preprocess
+try:
+    from .model_lstm import LSTMClassifier
+    from .dataset_lstm import pad_sequence, preprocess
+except ImportError:
+    from model_lstm import LSTMClassifier
+    from dataset_lstm import pad_sequence, preprocess
 
 MODEL_PATH = "models/lstm/lstm_model.pt"
 VOCAB_PATH = "models/lstm/lstm_vocab.pkl"

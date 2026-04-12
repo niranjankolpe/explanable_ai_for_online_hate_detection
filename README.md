@@ -16,8 +16,8 @@ This project utilizes Explainable NLP Framework for Cyberbullying and Online Har
 4. Next, run "dvc repro" if installing on new machine with no dvc local remote storage configured earlier OR run "dvc pull" if dvc local remote was configured earlier on same machine.
 
 ### Project Run/ Execution
-1. Open CMD in root folder with virtual environment activated and run "uvicorn src.api:app --reload". Visit "http://127.0.0.1:8000/docs".
-2. In the POST/predict, click "Try it out" and enter the sample input for the text.
+1. Open CMD in root folder with virtual environment activated and run "streamlit run src/streamlit_app.py". Open the local url it generates.
+2. Enter the sample input for the text.
 - "you are idiot" (shall return OFF classification)
 - "you are nice"  (shall return NOT classification)
 - "nice work bro" (shall return NOT classification)
