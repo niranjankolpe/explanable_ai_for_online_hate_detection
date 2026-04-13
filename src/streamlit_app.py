@@ -1,19 +1,19 @@
+import os
+import json
 import streamlit as st
 import yaml
-import json
 import joblib
 import pandas as pd
-import os
 
 from predict import load_model, predict, predict_proba
 from predict_bert import load_bert_model, predict_bert, predict_bert_proba
 from explain import explain_prediction
+from monitor import log_prediction, load_logs, compute_drift, get_model_breakdown
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
-BERT_MAX_LEN = params["bert"]["max_len"]
-
+BERT_MAX_LEN   = params["bert"]["max_len"]
 baseline_model = joblib.load("models/baseline/baseline_model.pkl")
 vectorizer     = joblib.load("models/baseline/tfidf_vectorizer.pkl")
 
@@ -29,7 +29,7 @@ lstm_model, vocab, bert_model, tokenizer = load_all()
 
 st.title("Explainable AI for Offensive Language Detection")
 
-tab1, tab2, tab3 = st.tabs(["Prediction", "Explanation", "Bias Analysis"])
+tab1, tab2, tab3, tab4 = st.tabs(["Prediction", "Explanation", "Bias Analysis", "Monitoring"])
 
 # ── Tab 1: Prediction ──────────────────────────────────────────────────────────
 with tab1:
@@ -44,17 +44,23 @@ with tab1:
             if model_choice == "baseline":
                 X     = vectorizer.transform([text.lower()])
                 label = baseline_model.predict(X)[0]
-                st.success(f"Label: **{label}**")
-                st.info("Confidence not available for baseline model.")
+                proba = baseline_model.predict_proba(X)[0]
+                confidence = float(max(proba))
+                log_prediction(text, "baseline", label, confidence)
+                color = "red" if label == "OFF" else "green"
+                st.markdown(f"**Label:** :{color}[{label}]")
+                st.write(f"**Confidence:** {confidence:.4f}")
 
             elif model_choice == "bert":
                 label, confidence = predict_bert(text, bert_model, tokenizer, BERT_MAX_LEN)
+                log_prediction(text, "bert", label, confidence)
                 color = "red" if label == "OFF" else "green"
                 st.markdown(f"**Label:** :{color}[{label}]")
                 st.write(f"**Confidence:** {confidence:.4f}")
 
             else:
                 label, confidence = predict(text, lstm_model, vocab)
+                log_prediction(text, "lstm", label, confidence)
                 color = "red" if label == "OFF" else "green"
                 st.markdown(f"**Label:** :{color}[{label}]")
                 st.write(f"**Confidence:** {confidence:.4f}")
@@ -106,10 +112,10 @@ with tab3:
         st.subheader("Summary")
         summary_df = pd.DataFrame([
             {
-                "Model":           m,
+                "Model":              m,
                 "Biased Predictions": summary["bias_counts"][m],
-                "Total Sentences": summary["total_sentences"],
-                "Bias Rate (%)":   summary["bias_rate_percent"][m]
+                "Total Sentences":    summary["total_sentences"],
+                "Bias Rate (%)":      summary["bias_rate_percent"][m]
             }
             for m in ["baseline", "lstm", "bert"]
         ])
@@ -121,10 +127,10 @@ with tab3:
                 rows = []
                 for e in entries:
                     rows.append({
-                        "Sentence":          e["sentence"],
-                        "Baseline":          e["baseline"]["label"],
-                        "BiLSTM":            e["lstm"]["label"],
-                        "DistilBERT":        e["bert"]["label"],
+                        "Sentence":   e["sentence"],
+                        "Baseline":   e["baseline"]["label"],
+                        "BiLSTM":     e["lstm"]["label"],
+                        "DistilBERT": e["bert"]["label"],
                     })
                 st.dataframe(pd.DataFrame(rows))
 
@@ -143,3 +149,64 @@ with tab3:
             for m in ["baseline", "lstm", "bert"]
         ])
         st.dataframe(summary_df)
+
+# ── Tab 4: Monitoring ──────────────────────────────────────────────────────────
+with tab4:
+    st.subheader("Prediction Monitoring & Drift Detection")
+    st.markdown(
+        f"Tracks all predictions made via the app. "
+        f"Drift is flagged if the offensive rate exceeds **60%** "
+        f"in the last **20 predictions**."
+    )
+
+    records = load_logs()
+    drift   = compute_drift(records)
+
+    if not records:
+        st.info("No predictions logged yet. Make some predictions in the Prediction tab.")
+    else:
+        # Drift alert
+        if drift["drift_detected"]:
+            st.error(
+                f"⚠️ Drift Detected! Offensive rate in last "
+                f"{drift['recent_window']} predictions: "
+                f"{drift['recent_off_rate']*100:.1f}% "
+                f"(threshold: {drift['drift_threshold']*100:.0f}%)"
+            )
+        else:
+            st.success(
+                f"✅ No drift detected. Offensive rate in last "
+                f"{drift['recent_window']} predictions: "
+                f"{drift['recent_off_rate']*100:.1f}%"
+            )
+
+        # Summary metrics
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Predictions", drift["total_predictions"])
+        col2.metric("Recent OFF Rate",   f"{drift['recent_off_rate']*100:.1f}%")
+        col3.metric("Drift Threshold",   f"{drift['drift_threshold']*100:.0f}%")
+
+        # Model breakdown
+        st.subheader("Predictions by Model")
+        breakdown = get_model_breakdown(records)
+        bd_rows   = []
+        for m, counts in breakdown.items():
+            off_rate = counts["OFF"] / counts["total"] * 100 if counts["total"] > 0 else 0
+            bd_rows.append({
+                "Model":       m,
+                "Total":       counts["total"],
+                "OFF":         counts["OFF"],
+                "NOT":         counts["NOT"],
+                "OFF Rate (%)": round(off_rate, 1)
+            })
+        st.dataframe(pd.DataFrame(bd_rows))
+
+        # Recent predictions table
+        st.subheader("Recent Predictions")
+        recent_df = pd.DataFrame(records[-20:][::-1])
+        st.dataframe(recent_df)
+
+        if st.button("Clear Logs"):
+            os.remove("logs/predictions.log")
+            st.success("Logs cleared.")
+            st.rerun()
