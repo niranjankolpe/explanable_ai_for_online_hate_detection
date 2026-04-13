@@ -9,6 +9,8 @@ import torch
 
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 
+import mlflow
+
 from model_lstm import LSTMClassifier
 from dataset_lstm import pad_sequence, preprocess
 from predict_bert import load_bert_model, predict_bert_proba
@@ -161,7 +163,17 @@ def main():
     with open("reports/metrics.json", "w") as f:
         json.dump(metrics, f, indent=4)
 
-    print("\nMetrics saved to reports/metrics.json")
+    # Log final test metrics to MLflow
+    mlflow.set_experiment("hate_detection_evaluation")
+    with mlflow.start_run():
+        mlflow.log_metric("baseline_accuracy",    float(baseline_acc))
+        mlflow.log_metric("baseline_f1_weighted", float(baseline_f1))
+        mlflow.log_metric("lstm_accuracy",        float(lstm_acc))
+        mlflow.log_metric("lstm_f1_weighted",     float(lstm_f1))
+        mlflow.log_metric("bert_accuracy",        float(bert_acc))
+        mlflow.log_metric("bert_f1_weighted",     float(bert_f1))
+
+    print("\nMetrics saved to reports/metrics.json and logged to MLflow.")
 
 
 if __name__ == "__main__":

@@ -4,5 +4,7 @@ docs/
 models/
 reports/
 logs/
+mlruns/
+mlflow.db
 __pycache__/
 *.pyc

@@ -1,23 +1,22 @@
 import os
 import yaml
-import pickle
 import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, classification_report
 from torch.optim import AdamW
 
-# Configuration
-TRAIN_PATH  = "data/olid-training-v1.0.tsv"
-MODEL_DIR   = "models/bert"
+import mlflow
+
+TRAIN_PATH = "data/olid-training-v1.0.tsv"
+MODEL_DIR  = "models/bert"
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
-bert_params = params["bert"]
-
+bert_params   = params["bert"]
 MAX_LEN       = bert_params["max_len"]
 BATCH_SIZE    = bert_params["batch_size"]
 EPOCHS        = bert_params["epochs"]
@@ -51,8 +50,20 @@ class OLIDDatasetBert(Dataset):
 
 
 def main():
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
+    mlflow.set_experiment("hate_detection_bert")
+    mlflow.start_run()
+
+    mlflow.log_params({
+        "model":         MODEL_NAME,
+        "max_len":       MAX_LEN,
+        "batch_size":    BATCH_SIZE,
+        "epochs":        EPOCHS,
+        "learning_rate": LEARNING_RATE
+    })
+
     print("Loading data...")
-    df = pd.read_csv(TRAIN_PATH, sep="\t")
+    df     = pd.read_csv(TRAIN_PATH, sep="\t")
     texts  = df["tweet"].astype(str).tolist()
     labels = [1 if l == "OFF" else 0 for l in df["subtask_a"]]
 
@@ -64,21 +75,15 @@ def main():
     )
 
     print(f"Loading tokenizer: {MODEL_NAME}")
-    tokenizer = DistilBertTokenizerFast.from_pretrained(MODEL_NAME)
-
+    tokenizer     = DistilBertTokenizerFast.from_pretrained(MODEL_NAME)
     train_dataset = OLIDDatasetBert(X_train, y_train, tokenizer, MAX_LEN)
     val_dataset   = OLIDDatasetBert(X_val,   y_val,   tokenizer, MAX_LEN)
-
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader   = DataLoader(val_dataset,   batch_size=BATCH_SIZE)
+    train_loader  = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader    = DataLoader(val_dataset,   batch_size=BATCH_SIZE)
 
     print(f"Loading model: {MODEL_NAME}")
-    model = DistilBertForSequenceClassification.from_pretrained(
-        MODEL_NAME,
-        num_labels=2
-    )
-
-    device    = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model  = DistilBertForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=2)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     model.to(device)
 
@@ -95,19 +100,14 @@ def main():
             labels_batch   = batch["label"].to(device)
 
             optimizer.zero_grad()
-            outputs = model(
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                labels=labels_batch
-            )
-            loss = outputs.loss
+            outputs    = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels_batch)
+            loss       = outputs.loss
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
 
         avg_loss = total_loss / len(train_loader)
 
-        # Validation
         model.eval()
         all_preds, all_labels = [], []
         with torch.no_grad():
@@ -121,12 +121,23 @@ def main():
 
         val_acc = accuracy_score(all_labels, all_preds)
         val_f1  = f1_score(all_labels, all_preds, average="weighted")
+
         print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {avg_loss:.4f} | Val Acc: {val_acc:.4f} | Val F1: {val_f1:.4f}")
+        print(classification_report(all_labels, all_preds, target_names=["NOT", "OFF"]))
+
+        mlflow.log_metric("loss",     avg_loss, step=epoch)
+        mlflow.log_metric("val_acc",  val_acc,  step=epoch)
+        mlflow.log_metric("val_f1",   val_f1,   step=epoch)
+
+    mlflow.log_metric("final_val_acc", val_acc)
+    mlflow.log_metric("final_val_f1",  val_f1)
 
     print("Saving model and tokenizer...")
     os.makedirs(MODEL_DIR, exist_ok=True)
     model.save_pretrained(MODEL_DIR)
     tokenizer.save_pretrained(MODEL_DIR)
+
+    mlflow.end_run()
     print("Done.")
 
 

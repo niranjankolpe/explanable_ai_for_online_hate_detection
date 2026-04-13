@@ -10,13 +10,13 @@ stages:
       nfiles: 9
     - path: src/train_baseline.py
       hash: md5
-      md5: ee98f59f02370fc322ebd1e04b2b1a5d
-      size: 2198
+      md5: 9ccb878e018da7e98423076405c88417
+      size: 2572
     outs:
     - path: models/baseline
       hash: md5
-      md5: 8c269a04035a22673351aeb360b3e179.dir
-      size: 460360
+      md5: 14bc77a364ad56cb59456ac6f4153478.dir
+      size: 2079195
       nfiles: 2
   evaluate:
     cmd: python src/evaluate.py
@@ -62,8 +62,8 @@ stages:
       size: 1322
     - path: src/train_lstm.py
       hash: md5
-      md5: 73ab7213bd30397462709ee79141633b
-      size: 2741
+      md5: dff759491bc86d23678e6ad6ecb73fdb
+      size: 4003
     params:
       params.yaml:
         lstm:
@@ -79,6 +79,6 @@ stages:
     outs:
     - path: models/lstm
       hash: md5
-      md5: 4f4683d65494dd0cc31e1c6c634f307c.dir
+      md5: 5fbceb1a3a52cb7ab1e9c11e57ea05f6.dir
       size: 13221603
       nfiles: 2
