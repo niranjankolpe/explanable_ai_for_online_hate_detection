@@ -6,6 +6,11 @@ try:
 except ImportError:
     from dataset_lstm import preprocess
 
+import yaml
+with open("params.yaml") as f:
+    _params = yaml.safe_load(f)
+_BERT_MAX_LEN = _params["bert"]["max_len"]
+
 MODEL_DIR = "models/bert"
 
 def load_bert_model():
@@ -15,7 +20,7 @@ def load_bert_model():
     return model, tokenizer
 
 
-def predict_bert(text, model, tokenizer, max_len=128):
+def predict_bert(text, model, tokenizer, max_len=_BERT_MAX_LEN):
     text     = preprocess(text)
     encoding = tokenizer(
         text,
@@ -32,7 +37,7 @@ def predict_bert(text, model, tokenizer, max_len=128):
     return label, confidence.item()
 
 
-def predict_bert_proba(texts, model, tokenizer, max_len=128):
+def predict_bert_proba(texts, model, tokenizer, max_len=_BERT_MAX_LEN):
     encodings = tokenizer(
         texts,
         max_length=max_len,

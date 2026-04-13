@@ -1,5 +1,4 @@
 import shap
-import numpy as np
 from lime.lime_text import LimeTextExplainer
 
 class_names = ["NOT", "OFF"]

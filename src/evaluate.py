@@ -96,9 +96,9 @@ def evaluate_bert(df):
     batch_size = bert_params["batch_size"]
     all_preds  = []
 
-    print(f"Starting for loop. Length of texts: {len(texts)}. Batch Size: {batch_size}")
+    #print(f"Starting for loop. Length of texts: {len(texts)}. Batch Size: {batch_size}")
     for i in range(0, len(texts), batch_size):
-        print(f"Iteration {i} started...")
+        #print(f"Iteration {i} started...")
         batch_texts = texts[i:i + batch_size]
         #print("Got Batch texts")
         probs       = predict_bert_proba(batch_texts, bert_model, tokenizer, BERT_MAX_LEN)

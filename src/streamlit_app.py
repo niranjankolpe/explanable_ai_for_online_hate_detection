@@ -154,9 +154,9 @@ with tab3:
 with tab4:
     st.subheader("Prediction Monitoring & Drift Detection")
     st.markdown(
-        f"Tracks all predictions made via the app. "
-        f"Drift is flagged if the offensive rate exceeds **60%** "
-        f"in the last **20 predictions**."
+        "Tracks all predictions made via the app. "
+        "Drift is flagged if the offensive rate exceeds **60%** "
+        "in the last **20 predictions**."
     )
 
     records = load_logs()
