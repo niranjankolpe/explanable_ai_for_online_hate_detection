@@ -45,3 +45,19 @@ stages:
     - bert
     metrics:
     - reports/metrics.json
+
+  bias_analysis:
+    cmd: python src/bias_analysis.py
+    deps:
+    - models/baseline
+    - models/lstm
+    - models/bert
+    - src/bias_analysis.py
+    - src/dataset_lstm.py
+    - src/model_lstm.py
+    - src/predict_bert.py
+    params:
+    - lstm
+    - bert
+    outs:
+    - reports/bias_report.json
