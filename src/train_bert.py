@@ -2,6 +2,7 @@ import os
 import yaml
 import pandas as pd
 import torch
+import time
 from torch.utils.data import Dataset, DataLoader
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 from sklearn.model_selection import train_test_split
@@ -9,6 +10,7 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report
 from torch.optim import AdamW
 
 import mlflow
+import mlflow.pytorch
 
 TRAIN_PATH = "data/olid-training-v1.0.tsv"
 MODEL_DIR  = "models/bert"
@@ -89,12 +91,14 @@ def main():
 
     optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
 
-    print("Starting training...")
+    print(f"Starting epochs...at {time.ctime()}")
     for epoch in range(EPOCHS):
+        print(f"Epoch {epoch} of {EPOCHS} at {time.ctime()}")
         model.train()
         total_loss = 0
 
-        for batch in train_loader:
+        for i, batch in enumerate(train_loader):
+            print(f"Iteration: {i} at {time.ctime()}")
             input_ids      = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
             labels_batch   = batch["label"].to(device)
@@ -105,20 +109,26 @@ def main():
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-
+        
+        print(f"Getting Average loss at {time.ctime()}")
         avg_loss = total_loss / len(train_loader)
 
+        print(f"Starting model validation at {time.ctime()}")
         model.eval()
         all_preds, all_labels = [], []
+
+        print(f"Loading batches at {time.ctime()}")
         with torch.no_grad():
-            for batch in val_loader:
+            for i, batch in enumerate(val_loader):
+                print(f"Batch: {i} at {time.ctime()}")
                 input_ids      = batch["input_ids"].to(device)
                 attention_mask = batch["attention_mask"].to(device)
                 outputs        = model(input_ids=input_ids, attention_mask=attention_mask)
                 preds          = torch.argmax(outputs.logits, dim=1).cpu().tolist()
                 all_preds.extend(preds)
                 all_labels.extend(batch["label"].tolist())
-
+        
+        print(f"Getting metrics at {time.ctime()}")
         val_acc = accuracy_score(all_labels, all_preds)
         val_f1  = f1_score(all_labels, all_preds, average="weighted")
 
@@ -137,6 +147,15 @@ def main():
     model.save_pretrained(MODEL_DIR)
     tokenizer.save_pretrained(MODEL_DIR)
 
+    mlflow.pytorch.log_model(model, "bert_model")
+    run_id = mlflow.active_run().info.run_id
+    mlflow.register_model(
+        f"runs:/{run_id}/bert_model",
+        "BERT_Hate_Model"
+    )
+
+    mlflow.log_artifacts(MODEL_DIR)
+    
     mlflow.end_run()
     print("Done.")
 

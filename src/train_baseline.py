@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 
 import mlflow
+import mlflow.sklearn
 
 DATA_PATH    = "data/olid-training-v1.0.tsv"
 RANDOM_STATE = 42
@@ -65,6 +66,16 @@ def main():
     model = LogisticRegression(max_iter=1000, class_weight="balanced")
     model.fit(X_train_tfidf, y_train)
     joblib.dump(model, "models/baseline/baseline_model.pkl")
+
+    mlflow.sklearn.log_model(model, "baseline_model")
+    run_id = mlflow.active_run().info.run_id
+    mlflow.register_model(
+        f"runs:/{run_id}/baseline_model",
+        "Baseline_Hate_Model"
+    )
+
+    mlflow.log_artifact("models/baseline/baseline_model.pkl")
+    mlflow.log_artifact("models/baseline/tfidf_vectorizer.pkl")
 
     print("Evaluating...")
     preds = model.predict(X_val_tfidf)

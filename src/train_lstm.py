@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, f1_score
 
 import mlflow
+import mlflow.pytorch
 
 from dataset_lstm import Vocabulary, OLIDDataset
 from model_lstm import LSTMClassifier
@@ -119,6 +120,16 @@ def main():
 
     with open(VOCAB_PATH, "wb") as f:
         pickle.dump(vocab.word2idx, f)
+
+    mlflow.pytorch.log_model(model, "lstm_model")
+    run_id = mlflow.active_run().info.run_id
+    mlflow.register_model(
+        f"runs:/{run_id}/lstm_model",
+        "LSTM_Hate_Model"
+    )
+
+    mlflow.log_artifact(MODEL_PATH)
+    mlflow.log_artifact(VOCAB_PATH)
 
     mlflow.end_run()
     print("Training complete.")

@@ -6,6 +6,8 @@ pandas
 PyYAML
 scikit-learn
 torch
+torchvision
 transformers
 streamlit
 mlflow
+dvc
