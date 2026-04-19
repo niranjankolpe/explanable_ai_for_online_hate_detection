@@ -27,7 +27,7 @@ def load_all():
 
 lstm_model, vocab, bert_model, tokenizer = load_all()
 
-st.title("Explainable AI for Offensive Language Detection")
+st.title("Explainable AI for Offensive Language Detection Application")
 
 tab1, tab2, tab3, tab4 = st.tabs(["Prediction", "Explanation", "Bias Analysis", "Monitoring"])
 
