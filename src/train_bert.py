@@ -142,7 +142,7 @@ def main():
         val_f1  = f1_score(all_labels, all_preds, average="weighted")
 
         print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {avg_loss:.4f} | Val Acc: {val_acc:.4f} | Val F1: {val_f1:.4f}")
-        print(classification_report(all_labels, all_preds, target_names=["NOT", "OFF"]))
+        print(classification_report(all_labels, all_preds, target_names=subtask_config["labels"]))
 
         mlflow.log_metric("loss",     avg_loss, step=epoch)
         mlflow.log_metric("val_acc",  val_acc,  step=epoch)

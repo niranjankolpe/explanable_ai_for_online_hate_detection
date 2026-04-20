@@ -26,37 +26,67 @@ stages:
       md5: 9a89d952075278faac34cd87ebc7204f.dir
       size: 2201916
       nfiles: 9
-    - path: models/baseline
+    - path: models/baseline_a
       hash: md5
-      md5: 61050fa05ff60786faedbc83a10ea162.dir
+      md5: ba988ac59927997200142827b385fb04.dir
       size: 460360
       nfiles: 2
-    - path: models/bert
+    - path: models/baseline_b
       hash: md5
-      md5: 7cc7f8c97c3be676e3806dd483cb57c8.dir
+      md5: d1102e6f8ea006f830f860f974d81d67.dir
+      size: 462564
+      nfiles: 2
+    - path: models/baseline_c
+      hash: md5
+      md5: e57a31455bdcafd8e2dea5aefa297f89.dir
+      size: 622885
+      nfiles: 2
+    - path: models/bert_a
+      hash: md5
+      md5: 60b3742341b77d3e21a0565f3fbeb88c.dir
       size: 268545231
       nfiles: 4
-    - path: models/lstm
+    - path: models/bert_b
       hash: md5
-      md5: 77cd48a9d38cb3b27265966b3c3d41a0.dir
-      size: 13222006
+      md5: 42b2a65f44e5a4eab271a2e9e6c3ffb1.dir
+      size: 268545231
+      nfiles: 4
+    - path: models/bert_c
+      hash: md5
+      md5: 2fd155c9b7b64bb7656c005d5214f09f.dir
+      size: 268548479
+      nfiles: 4
+    - path: models/lstm_a
+      hash: md5
+      md5: 1d0f13a52702d0b5b512fea62e5fa45e.dir
+      size: 12049622
+      nfiles: 2
+    - path: models/lstm_b
+      hash: md5
+      md5: 39d5dc3fe00ea1144dd65d69a685caf8.dir
+      size: 7559103
+      nfiles: 2
+    - path: models/lstm_c
+      hash: md5
+      md5: 9488c09dc36a30c04a9fcba057dec13c.dir
+      size: 7307908
       nfiles: 2
     - path: src/dataset_lstm.py
       hash: md5
-      md5: 5c2450dece160d92efba3040eadc5f54
-      size: 1967
+      md5: 045e5f8f8bc3ec15e0fcb31dc3d34f16
+      size: 1979
     - path: src/evaluate.py
       hash: md5
-      md5: b32ec1aba73e0bd4555ac4d34a0c558b
-      size: 5706
+      md5: 2db8f000c58769a479a31466ffb1ffbd
+      size: 5814
     - path: src/model_lstm.py
       hash: md5
       md5: 1dd768049827204f34b444387148885b
       size: 1322
     - path: src/predict_bert.py
       hash: md5
-      md5: 038169d9a483a0873ac534f44220acc1
-      size: 1519
+      md5: 3040d0085a4566863d54215ac5427161
+      size: 1596
     params:
       params.yaml:
         bert:
@@ -78,8 +108,8 @@ stages:
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: 06640efea92b01994493384283b8cee7
-      size: 328
+      md5: 7abab707013844bb8f6618297b6d75cc
+      size: 1175
   train_lstm:
     cmd: python src/train_lstm.py a
     deps:
@@ -118,7 +148,7 @@ stages:
       size: 12049622
       nfiles: 2
   train_bert:
-    cmd: python src/train_bert.py
+    cmd: python src/train_bert.py a
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
@@ -126,8 +156,8 @@ stages:
       size: 1975156
     - path: src/train_bert.py
       hash: md5
-      md5: 2b1b3fb4edf9d692c4b2a5f1ae2f8c7f
-      size: 5850
+      md5: 8c83a56e745735eec00ba4cda3ee81f9
+      size: 6330
     params:
       params.yaml:
         bert:
@@ -137,45 +167,45 @@ stages:
           epochs: 1
           learning_rate: 2e-05
     outs:
-    - path: models/bert
+    - path: models/bert_a
       hash: md5
-      md5: 7cc7f8c97c3be676e3806dd483cb57c8.dir
+      md5: 60b3742341b77d3e21a0565f3fbeb88c.dir
       size: 268545231
       nfiles: 4
   bias_analysis:
     cmd: python src/bias_analysis.py
     deps:
-    - path: models/baseline
+    - path: models/baseline_a
       hash: md5
-      md5: 61050fa05ff60786faedbc83a10ea162.dir
+      md5: ba988ac59927997200142827b385fb04.dir
       size: 460360
       nfiles: 2
-    - path: models/bert
+    - path: models/bert_a
       hash: md5
-      md5: 7cc7f8c97c3be676e3806dd483cb57c8.dir
+      md5: 60b3742341b77d3e21a0565f3fbeb88c.dir
       size: 268545231
       nfiles: 4
-    - path: models/lstm
+    - path: models/lstm_a
       hash: md5
-      md5: 77cd48a9d38cb3b27265966b3c3d41a0.dir
-      size: 13222006
+      md5: 1d0f13a52702d0b5b512fea62e5fa45e.dir
+      size: 12049622
       nfiles: 2
     - path: src/bias_analysis.py
       hash: md5
-      md5: db84931aa55a1bb9c95427130842f3c2
-      size: 5040
+      md5: 27c6e3cd69b09c7d714c500acffbcc37
+      size: 4951
     - path: src/dataset_lstm.py
       hash: md5
-      md5: 5c2450dece160d92efba3040eadc5f54
-      size: 1967
+      md5: 045e5f8f8bc3ec15e0fcb31dc3d34f16
+      size: 1979
     - path: src/model_lstm.py
       hash: md5
       md5: 1dd768049827204f34b444387148885b
       size: 1322
     - path: src/predict_bert.py
       hash: md5
-      md5: 038169d9a483a0873ac534f44220acc1
-      size: 1519
+      md5: 3040d0085a4566863d54215ac5427161
+      size: 1596
     params:
       params.yaml:
         bert:
@@ -197,8 +227,8 @@ stages:
     outs:
     - path: reports/bias_report.json
       hash: md5
-      md5: 1da118b52d6aa79fe5dcc215276c90ae
-      size: 11887
+      md5: 85a66c2a085a2d116115fc86b98300ff
+      size: 11924
   train_b:
     cmd: python src/train_baseline.py b
     deps:
@@ -309,3 +339,53 @@ stages:
       md5: 9488c09dc36a30c04a9fcba057dec13c.dir
       size: 7307908
       nfiles: 2
+  train_bert_b:
+    cmd: python src/train_bert.py b
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/train_bert.py
+      hash: md5
+      md5: 8c83a56e745735eec00ba4cda3ee81f9
+      size: 6330
+    params:
+      params.yaml:
+        bert:
+          model_name: distilbert-base-uncased
+          max_len: 128
+          batch_size: 32
+          epochs: 1
+          learning_rate: 2e-05
+    outs:
+    - path: models/bert_b
+      hash: md5
+      md5: 42b2a65f44e5a4eab271a2e9e6c3ffb1.dir
+      size: 268545231
+      nfiles: 4
+  train_bert_c:
+    cmd: python src/train_bert.py c
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/train_bert.py
+      hash: md5
+      md5: 8c83a56e745735eec00ba4cda3ee81f9
+      size: 6330
+    params:
+      params.yaml:
+        bert:
+          model_name: distilbert-base-uncased
+          max_len: 128
+          batch_size: 32
+          epochs: 1
+          learning_rate: 2e-05
+    outs:
+    - path: models/bert_c
+      hash: md5
+      md5: 2fd155c9b7b64bb7656c005d5214f09f.dir
+      size: 268548479
+      nfiles: 4
