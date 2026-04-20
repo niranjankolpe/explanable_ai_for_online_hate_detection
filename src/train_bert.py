@@ -12,8 +12,11 @@ from torch.optim import AdamW
 import mlflow
 import mlflow.pytorch
 
+import sys
+
 TRAIN_PATH = "data/olid-training-v1.0.tsv"
-MODEL_DIR  = "models/bert"
+subtask  = sys.argv[1] if len(sys.argv) > 1 else "a"
+MODEL_DIR = f"models/bert_{subtask}"
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
@@ -67,7 +70,13 @@ def main():
     print("Loading data...")
     df     = pd.read_csv(TRAIN_PATH, sep="\t")
     texts  = df["tweet"].astype(str).tolist()
-    labels = [1 if l == "OFF" else 0 for l in df["subtask_a"]]
+    subtask_config = params["subtasks"][subtask]
+    label2idx      = {label: idx for idx, label in enumerate(subtask_config["labels"])}
+    df             = pd.read_csv(TRAIN_PATH, sep="\t")
+    df             = df[df[subtask_config["column"]].notna()].copy()
+    texts          = df["tweet"].astype(str).tolist()
+    labels         = [label2idx[l] for l in df[subtask_config["column"]]]
+    num_labels     = len(subtask_config["labels"])
 
     X_train, X_val, y_train, y_val = train_test_split(
         texts, labels,
@@ -84,7 +93,7 @@ def main():
     val_loader    = DataLoader(val_dataset,   batch_size=BATCH_SIZE)
 
     print(f"Loading model: {MODEL_NAME}")
-    model  = DistilBertForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=2)
+    model  = DistilBertForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=num_labels)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     model.to(device)

@@ -1,6 +1,8 @@
 import os
+import sys
 import joblib
 import pandas as pd
+import yaml
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -14,8 +16,11 @@ DATA_PATH    = "data/olid-training-v1.0.tsv"
 RANDOM_STATE = 42
 TEST_SIZE    = 0.2
 
+with open("params.yaml") as f:
+    params = yaml.safe_load(f)
 
-def load_data(path: str) -> pd.DataFrame:
+
+def load_data(path):
     return pd.read_csv(path, sep="\t")
 
 
@@ -29,23 +34,33 @@ def preprocess_text(text_series):
     )
 
 
-def main():
+def train_subtask(subtask):
+    subtask_config = params["subtasks"][subtask]
+    column         = subtask_config["column"]
+    labels         = subtask_config["labels"]
+
+    print(f"\nTraining baseline for Subtask {subtask.upper()}...")
+
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
-    mlflow.set_experiment("hate_detection_baseline")
+    mlflow.set_experiment(f"hate_detection_baseline_subtask_{subtask}")
     mlflow.start_run()
 
     mlflow.log_param("model",        "tfidf_logistic_regression")
+    mlflow.log_param("subtask",      subtask)
+    mlflow.log_param("labels",       str(labels))
     mlflow.log_param("max_features", 10000)
     mlflow.log_param("ngram_range",  "(1,2)")
     mlflow.log_param("class_weight", "balanced")
-    mlflow.log_param("test_size",    TEST_SIZE)
-    mlflow.log_param("random_state", RANDOM_STATE)
 
-    print("Loading data...")
-    df         = load_data(DATA_PATH)
+    df = load_data(DATA_PATH)
     df["tweet"] = preprocess_text(df["tweet"])
-    X          = df["tweet"]
-    y          = df["subtask_a"]
+
+    # Filter rows where subtask column is not null
+    df = df[df[column].notna()].copy()
+    print(f"Subtask {subtask.upper()} training samples: {len(df)}")
+
+    X = df["tweet"]
+    y = df[column]
 
     X_train, X_val, y_train, y_val = train_test_split(
         X, y,
@@ -54,42 +69,36 @@ def main():
         stratify=y
     )
 
-    print("Vectorizing text...")
     vectorizer    = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_val_tfidf   = vectorizer.transform(X_val)
 
-    os.makedirs("models/baseline", exist_ok=True)
-    joblib.dump(vectorizer, "models/baseline/tfidf_vectorizer.pkl")
+    os.makedirs(f"models/baseline_{subtask}", exist_ok=True)
+    joblib.dump(vectorizer, f"models/baseline_{subtask}/tfidf_vectorizer.pkl")
 
-    print("Training Logistic Regression...")
     model = LogisticRegression(max_iter=1000, class_weight="balanced")
     model.fit(X_train_tfidf, y_train)
-    joblib.dump(model, "models/baseline/baseline_model.pkl")
+    joblib.dump(model, f"models/baseline_{subtask}/baseline_model.pkl")
 
-    mlflow.sklearn.log_model(model, "baseline_model")
-    run_id = mlflow.active_run().info.run_id
-    mlflow.register_model(
-        f"runs:/{run_id}/baseline_model",
-        "Baseline_Hate_Model"
-    )
-
-    mlflow.log_artifact("models/baseline/baseline_model.pkl")
-    mlflow.log_artifact("models/baseline/tfidf_vectorizer.pkl")
-
-    print("Evaluating...")
     preds = model.predict(X_val_tfidf)
     acc   = accuracy_score(y_val, preds)
     f1    = f1_score(y_val, preds, average="weighted")
 
-    mlflow.log_metric("val_accuracy", acc)
+    mlflow.log_metric("val_accuracy",    acc)
     mlflow.log_metric("val_f1_weighted", f1)
+    mlflow.sklearn.log_model(model, f"baseline_model_subtask_{subtask}")
     mlflow.end_run()
 
-    print(f"\nAccuracy: {acc:.4f}")
-    print(f"F1 Score: {f1:.4f}")
-    print("\nClassification Report:")
+    print(f"Subtask {subtask.upper()} | Acc: {acc:.4f} | F1: {f1:.4f}")
     print(classification_report(y_val, preds))
+
+
+def main():
+    subtask = sys.argv[1] if len(sys.argv) > 1 else "a"
+    if subtask not in ["a", "b", "c"]:
+        print("Usage: python train_baseline.py [a|b|c]")
+        return
+    train_subtask(subtask)
 
 
 if __name__ == "__main__":

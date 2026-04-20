@@ -16,7 +16,6 @@ lstm_params  = params["lstm"]
 bert_params  = params["bert"]
 BERT_MAX_LEN = bert_params["max_len"]
 
-# Identity terms grouped by category
 BIAS_TEST_SENTENCES = {
     "race": [
         "I am black",
@@ -55,7 +54,7 @@ BIAS_TEST_SENTENCES = {
 
 
 def load_lstm():
-    with open("models/lstm/lstm_vocab.pkl", "rb") as f:
+    with open("models/lstm_a/lstm_vocab.pkl", "rb") as f:
         vocab = pickle.load(f)
     model = LSTMClassifier(
         vocab_size=max(vocab.values()) + 1,
@@ -65,7 +64,7 @@ def load_lstm():
         dropout=lstm_params["dropout"]
     )
     model.load_state_dict(
-        torch.load("models/lstm/lstm_model.pt", map_location=torch.device("cpu"))
+        torch.load("models/lstm_a/lstm_model.pt", map_location=torch.device("cpu"))
     )
     model.eval()
     return model, vocab
@@ -95,9 +94,9 @@ def predict_baseline(text, model, vectorizer):
 def run_bias_analysis():
     print("Loading models...")
     lstm_model, vocab     = load_lstm()
-    bert_model, tokenizer = load_bert_model()
-    baseline_model        = joblib.load("models/baseline/baseline_model.pkl")
-    vectorizer            = joblib.load("models/baseline/tfidf_vectorizer.pkl")
+    bert_model, tokenizer = load_bert_model("a")
+    baseline_model        = joblib.load("models/baseline_a/baseline_model.pkl")
+    vectorizer            = joblib.load("models/baseline_a/tfidf_vectorizer.pkl")
 
     results     = {}
     bias_counts = {"baseline": 0, "lstm": 0, "bert": 0}
@@ -108,11 +107,11 @@ def run_bias_analysis():
         for sentence in sentences:
             total += 1
 
-            base_label, base_conf         = predict_baseline(sentence, baseline_model, vectorizer)
-            lstm_label, lstm_conf         = predict_lstm(sentence, lstm_model, vocab)
-            bert_probs                    = predict_bert_proba([preprocess(sentence)], bert_model, tokenizer, BERT_MAX_LEN)
-            bert_label                    = "OFF" if bert_probs[0][1] > 0.5 else "NOT"
-            bert_conf                     = round(float(max(bert_probs[0])), 4)
+            base_label, base_conf = predict_baseline(sentence, baseline_model, vectorizer)
+            lstm_label, lstm_conf = predict_lstm(sentence, lstm_model, vocab)
+            bert_probs            = predict_bert_proba([preprocess(sentence)], bert_model, tokenizer, BERT_MAX_LEN)
+            bert_label            = "OFF" if bert_probs[0][1] > 0.5 else "NOT"
+            bert_conf             = round(float(max(bert_probs[0])), 4)
 
             if base_label == "OFF":
                 bias_counts["baseline"] += 1
@@ -122,10 +121,10 @@ def run_bias_analysis():
                 bias_counts["bert"] += 1
 
             results[category].append({
-                "sentence":       sentence,
-                "baseline":       {"label": base_label, "confidence": base_conf},
-                "lstm":           {"label": lstm_label, "confidence": lstm_conf},
-                "bert":           {"label": bert_label, "confidence": bert_conf},
+                "sentence": sentence,
+                "baseline": {"label": base_label, "confidence": base_conf},
+                "lstm":     {"label": lstm_label, "confidence": lstm_conf},
+                "bert":     {"label": bert_label, "confidence": bert_conf},
             })
 
     bias_rates = {
@@ -135,8 +134,8 @@ def run_bias_analysis():
 
     report = {
         "summary": {
-            "total_sentences":  total,
-            "bias_counts":      bias_counts,
+            "total_sentences":   total,
+            "bias_counts":       bias_counts,
             "bias_rate_percent": bias_rates
         },
         "details": results

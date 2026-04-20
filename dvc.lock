@@ -1,7 +1,7 @@
 schema: '2.0'
 stages:
   train:
-    cmd: python src/train_baseline.py
+    cmd: python src/train_baseline.py a
     deps:
     - path: data
       hash: md5
@@ -10,12 +10,12 @@ stages:
       nfiles: 9
     - path: src/train_baseline.py
       hash: md5
-      md5: c1637ef8a0c3b4dc76c9a0cb9f76058d
-      size: 2924
+      md5: 5dd11e8f18e449b57d967dbe6544b1b4
+      size: 3185
     outs:
-    - path: models/baseline
+    - path: models/baseline_a
       hash: md5
-      md5: 61050fa05ff60786faedbc83a10ea162.dir
+      md5: ba988ac59927997200142827b385fb04.dir
       size: 460360
       nfiles: 2
   evaluate:
@@ -81,7 +81,7 @@ stages:
       md5: 06640efea92b01994493384283b8cee7
       size: 328
   train_lstm:
-    cmd: python src/train_lstm.py
+    cmd: python src/train_lstm.py a
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
@@ -89,16 +89,16 @@ stages:
       size: 1975156
     - path: src/dataset_lstm.py
       hash: md5
-      md5: 5c2450dece160d92efba3040eadc5f54
-      size: 1967
+      md5: 045e5f8f8bc3ec15e0fcb31dc3d34f16
+      size: 1979
     - path: src/model_lstm.py
       hash: md5
       md5: 1dd768049827204f34b444387148885b
       size: 1322
     - path: src/train_lstm.py
       hash: md5
-      md5: f3e35d4fad596825ffad8ed1d4bd3d77
-      size: 4302
+      md5: ca832a98371024be2156707e370fc8c9
+      size: 7167
     params:
       params.yaml:
         lstm:
@@ -112,10 +112,10 @@ stages:
           epochs: 12
           learning_rate: 0.0005
     outs:
-    - path: models/lstm
+    - path: models/lstm_a
       hash: md5
-      md5: 77cd48a9d38cb3b27265966b3c3d41a0.dir
-      size: 13222006
+      md5: 1d0f13a52702d0b5b512fea62e5fa45e.dir
+      size: 12049622
       nfiles: 2
   train_bert:
     cmd: python src/train_bert.py
@@ -199,3 +199,113 @@ stages:
       hash: md5
       md5: 1da118b52d6aa79fe5dcc215276c90ae
       size: 11887
+  train_b:
+    cmd: python src/train_baseline.py b
+    deps:
+    - path: data
+      hash: md5
+      md5: 9a89d952075278faac34cd87ebc7204f.dir
+      size: 2201916
+      nfiles: 9
+    - path: src/train_baseline.py
+      hash: md5
+      md5: 5dd11e8f18e449b57d967dbe6544b1b4
+      size: 3185
+    outs:
+    - path: models/baseline_b
+      hash: md5
+      md5: d1102e6f8ea006f830f860f974d81d67.dir
+      size: 462564
+      nfiles: 2
+  train_c:
+    cmd: python src/train_baseline.py c
+    deps:
+    - path: data
+      hash: md5
+      md5: 9a89d952075278faac34cd87ebc7204f.dir
+      size: 2201916
+      nfiles: 9
+    - path: src/train_baseline.py
+      hash: md5
+      md5: 5dd11e8f18e449b57d967dbe6544b1b4
+      size: 3185
+    outs:
+    - path: models/baseline_c
+      hash: md5
+      md5: e57a31455bdcafd8e2dea5aefa297f89.dir
+      size: 622885
+      nfiles: 2
+  train_lstm_b:
+    cmd: python src/train_lstm.py b
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/dataset_lstm.py
+      hash: md5
+      md5: 045e5f8f8bc3ec15e0fcb31dc3d34f16
+      size: 1979
+    - path: src/model_lstm.py
+      hash: md5
+      md5: 1dd768049827204f34b444387148885b
+      size: 1322
+    - path: src/train_lstm.py
+      hash: md5
+      md5: ca832a98371024be2156707e370fc8c9
+      size: 7167
+    params:
+      params.yaml:
+        lstm:
+          vocab_size: 20000
+          embedding_dim: 128
+          hidden_dim: 128
+          num_layers: 2
+          dropout: 0.5
+          max_len: 25
+          batch_size: 64
+          epochs: 12
+          learning_rate: 0.0005
+    outs:
+    - path: models/lstm_b
+      hash: md5
+      md5: 39d5dc3fe00ea1144dd65d69a685caf8.dir
+      size: 7559103
+      nfiles: 2
+  train_lstm_c:
+    cmd: python src/train_lstm.py c
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/dataset_lstm.py
+      hash: md5
+      md5: 045e5f8f8bc3ec15e0fcb31dc3d34f16
+      size: 1979
+    - path: src/model_lstm.py
+      hash: md5
+      md5: 1dd768049827204f34b444387148885b
+      size: 1322
+    - path: src/train_lstm.py
+      hash: md5
+      md5: ca832a98371024be2156707e370fc8c9
+      size: 7167
+    params:
+      params.yaml:
+        lstm:
+          vocab_size: 20000
+          embedding_dim: 128
+          hidden_dim: 128
+          num_layers: 2
+          dropout: 0.5
+          max_len: 25
+          batch_size: 64
+          epochs: 12
+          learning_rate: 0.0005
+    outs:
+    - path: models/lstm_c
+      hash: md5
+      md5: 9488c09dc36a30c04a9fcba057dec13c.dir
+      size: 7307908
+      nfiles: 2

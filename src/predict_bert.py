@@ -11,16 +11,17 @@ with open("params.yaml") as f:
     _params = yaml.safe_load(f)
 _BERT_MAX_LEN = _params["bert"]["max_len"]
 
-MODEL_DIR = "models/bert"
 
-def load_bert_model():
-    tokenizer = DistilBertTokenizerFast.from_pretrained(MODEL_DIR)
-    model     = DistilBertForSequenceClassification.from_pretrained(MODEL_DIR)
+def load_bert_model(subtask="a"):
+    model_dir = f"models/bert_{subtask}"
+    tokenizer = DistilBertTokenizerFast.from_pretrained(model_dir)
+    model     = DistilBertForSequenceClassification.from_pretrained(model_dir)
     model.eval()
     return model, tokenizer
 
 
-def predict_bert(text, model, tokenizer, max_len=_BERT_MAX_LEN):
+def predict_bert(text, model, tokenizer, max_len=_BERT_MAX_LEN, subtask="a"):
+    labels   = _params["subtasks"][subtask]["labels"]
     text     = preprocess(text)
     encoding = tokenizer(
         text,
@@ -33,7 +34,7 @@ def predict_bert(text, model, tokenizer, max_len=_BERT_MAX_LEN):
         outputs          = model(**encoding)
         probs            = torch.softmax(outputs.logits, dim=1)
         confidence, pred = torch.max(probs, dim=1)
-    label = "OFF" if pred.item() == 1 else "NOT"
+    label = labels[pred.item()]
     return label, confidence.item()
 
 

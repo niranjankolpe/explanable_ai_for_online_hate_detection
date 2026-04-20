@@ -13,21 +13,32 @@ from monitor import log_prediction, load_logs, compute_drift, get_model_breakdow
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
-BERT_MAX_LEN   = params["bert"]["max_len"]
-baseline_model = joblib.load("models/baseline/baseline_model.pkl")
-vectorizer     = joblib.load("models/baseline/tfidf_vectorizer.pkl")
+BERT_MAX_LEN = params["bert"]["max_len"]
 
 
 @st.cache_resource
-def load_all():
-    lstm_model, vocab     = load_model()
-    bert_model, tokenizer = load_bert_model()
-    return lstm_model, vocab, bert_model, tokenizer
+def load_all_models():
+    models = {}
+    for subtask in ["a", "b", "c"]:
+        try:
+            lstm_model, vocab     = load_model(subtask)
+            bert_model, tokenizer = load_bert_model(subtask)
+            baseline_model        = joblib.load(f"models/baseline_{subtask}/baseline_model.pkl")
+            vectorizer            = joblib.load(f"models/baseline_{subtask}/tfidf_vectorizer.pkl")
+            models[subtask] = {
+                "lstm":      (lstm_model, vocab),
+                "bert":      (bert_model, tokenizer),
+                "baseline":  (baseline_model, vectorizer)
+            }
+        except Exception as e:
+            models[subtask] = None
+            print(f"Could not load subtask {subtask} models: {e}")
+    return models
 
 
-lstm_model, vocab, bert_model, tokenizer = load_all()
+all_models = load_all_models()
 
-st.title("Explainable AI for Offensive Language Detection Application")
+st.title("Explainable AI for Offensive Language Detection")
 
 tab1, tab2, tab3, tab4 = st.tabs(["Prediction", "Explanation", "Bias Analysis", "Monitoring"])
 
@@ -36,50 +47,94 @@ with tab1:
     st.subheader("Classify Text")
     text         = st.text_area("Enter text to classify", key="pred_text")
     model_choice = st.selectbox("Select Model", ["baseline", "lstm", "bert"])
+    subtask      = st.selectbox("Select Subtask", [
+        "A — Offensive vs Not Offensive",
+        "B — Targeted vs Untargeted (offensive only)",
+        "C — Target Identification (targeted only)"
+    ])
+    subtask_key = subtask[0].lower()
 
     if st.button("Predict"):
         if not text.strip():
             st.warning("Please enter some text.")
+        elif all_models.get(subtask_key) is None:
+            st.error(f"Subtask {subtask_key.upper()} models not loaded. Train them first.")
         else:
+            labels = params["subtasks"][subtask_key]["labels"]
+
             if model_choice == "baseline":
-                X     = vectorizer.transform([text.lower()])
-                label = baseline_model.predict(X)[0]
-                proba = baseline_model.predict_proba(X)[0]
+                baseline_model, vectorizer = all_models[subtask_key]["baseline"]
+                X          = vectorizer.transform([text.lower()])
+                label      = baseline_model.predict(X)[0]
+                proba      = baseline_model.predict_proba(X)[0]
                 confidence = float(max(proba))
-                log_prediction(text, "baseline", label, confidence)
-                color = "red" if label == "OFF" else "green"
-                st.markdown(f"**Label:** :{color}[{label}]")
-                st.write(f"**Confidence:** {confidence:.4f}")
+                log_prediction(text, f"baseline_{subtask_key}", label, confidence)
 
             elif model_choice == "bert":
-                label, confidence = predict_bert(text, bert_model, tokenizer, BERT_MAX_LEN)
-                log_prediction(text, "bert", label, confidence)
-                color = "red" if label == "OFF" else "green"
-                st.markdown(f"**Label:** :{color}[{label}]")
-                st.write(f"**Confidence:** {confidence:.4f}")
+                bert_model, tokenizer = all_models[subtask_key]["bert"]
+                label, confidence = predict_bert(text, bert_model, tokenizer, BERT_MAX_LEN, subtask_key)
+                log_prediction(text, f"bert_{subtask_key}", label, confidence)
 
             else:
-                label, confidence = predict(text, lstm_model, vocab)
-                log_prediction(text, "lstm", label, confidence)
-                color = "red" if label == "OFF" else "green"
-                st.markdown(f"**Label:** :{color}[{label}]")
-                st.write(f"**Confidence:** {confidence:.4f}")
+                lstm_model, vocab    = all_models[subtask_key]["lstm"]
+                label, confidence    = predict(text, lstm_model, vocab, subtask_key)
+                log_prediction(text, f"lstm_{subtask_key}", label, confidence)
+
+            color = "red" if label in ["OFF", "TIN", "IND", "GRP"] else "green"
+            st.markdown(f"**Subtask {subtask_key.upper()} Label:** :{color}[{label}]")
+            st.write(f"**Confidence:** {confidence:.4f}")
+
+            # Hierarchical prediction for Subtask A
+            if subtask_key == "a" and label == "OFF" and all_models.get("b"):
+                st.markdown("---")
+                st.markdown("**Subtask B (Offense Type):**")
+                if model_choice == "baseline":
+                    baseline_b, vec_b = all_models["b"]["baseline"]
+                    X_b    = vec_b.transform([text.lower()])
+                    label_b = baseline_b.predict(X_b)[0]
+                elif model_choice == "bert":
+                    bert_b, tok_b = all_models["b"]["bert"]
+                    idx_b, conf_b = predict_bert(text, bert_b, tok_b, BERT_MAX_LEN)
+                    label_b, conf_b = predict_bert(text, bert_b, tok_b, BERT_MAX_LEN, "b")
+                else:
+                    lstm_b, vocab_b = all_models["b"]["lstm"]
+                    label_b, _      = predict(text, lstm_b, vocab_b, "b")
+                st.write(f"**{label_b}** ({'Targeted Insult' if label_b == 'TIN' else 'Untargeted'})")
+
+                if label_b == "TIN" and all_models.get("c"):
+                    st.markdown("**Subtask C (Target):**")
+                    if model_choice == "baseline":
+                        baseline_c, vec_c = all_models["c"]["baseline"]
+                        X_c     = vec_c.transform([text.lower()])
+                        label_c = baseline_c.predict(X_c)[0]
+                    elif model_choice == "bert":
+                        bert_c, tok_c = all_models["c"]["bert"]
+                        idx_c, conf_c = predict_bert(text, bert_c, tok_c, BERT_MAX_LEN)
+                        label_c, conf_c = predict_bert(text, bert_c, tok_c, BERT_MAX_LEN, "c")
+                    else:
+                        lstm_c, vocab_c = all_models["c"]["lstm"]
+                        label_c, _      = predict(text, lstm_c, vocab_c, "c")
+                    target_map = {"IND": "Individual", "GRP": "Group", "OTH": "Other"}
+                    st.write(f"**{label_c}** ({target_map.get(label_c, label_c)})")
 
 # ── Tab 2: Explanation ─────────────────────────────────────────────────────────
 with tab2:
     st.subheader("LIME + SHAP Explanation (LSTM only)")
-    exp_text = st.text_area("Enter text to explain", key="exp_text")
+    exp_text    = st.text_area("Enter text to explain", key="exp_text")
+    exp_subtask = st.selectbox("Subtask", ["a", "b", "c"], key="exp_subtask")
 
     if st.button("Explain"):
         if not exp_text.strip():
             st.warning("Please enter some text.")
+        elif all_models.get(exp_subtask) is None:
+            st.error(f"Subtask {exp_subtask.upper()} models not loaded.")
         else:
+            lstm_model, vocab = all_models[exp_subtask]["lstm"]
             with st.spinner("Generating explanation (this may take a minute)..."):
                 explanation = explain_prediction(
                     exp_text,
                     lambda texts: predict_proba(texts, lstm_model, vocab)
                 )
-
             st.subheader("LIME Explanation")
             lime_df = pd.DataFrame(
                 explanation["lime"].items(),
@@ -155,8 +210,8 @@ with tab4:
     st.subheader("Prediction Monitoring & Drift Detection")
     st.markdown(
         "Tracks all predictions made via the app. "
-        "Drift is flagged if the offensive rate exceeds **60%** "
-        "in the last **20 predictions**."
+        "Drift is flagged if the offensive rate exceeds 60% "
+        "in the last 20 predictions."
     )
 
     records = load_logs()
@@ -165,43 +220,39 @@ with tab4:
     if not records:
         st.info("No predictions logged yet. Make some predictions in the Prediction tab.")
     else:
-        # Drift alert
         if drift["drift_detected"]:
             st.error(
-                f"⚠️ Drift Detected! Offensive rate in last "
+                f"Drift Detected! Offensive rate in last "
                 f"{drift['recent_window']} predictions: "
                 f"{drift['recent_off_rate']*100:.1f}% "
                 f"(threshold: {drift['drift_threshold']*100:.0f}%)"
             )
         else:
             st.success(
-                f"✅ No drift detected. Offensive rate in last "
+                f"No drift detected. Offensive rate in last "
                 f"{drift['recent_window']} predictions: "
                 f"{drift['recent_off_rate']*100:.1f}%"
             )
 
-        # Summary metrics
         col1, col2, col3 = st.columns(3)
         col1.metric("Total Predictions", drift["total_predictions"])
         col2.metric("Recent OFF Rate",   f"{drift['recent_off_rate']*100:.1f}%")
         col3.metric("Drift Threshold",   f"{drift['drift_threshold']*100:.0f}%")
 
-        # Model breakdown
         st.subheader("Predictions by Model")
         breakdown = get_model_breakdown(records)
         bd_rows   = []
         for m, counts in breakdown.items():
             off_rate = counts["OFF"] / counts["total"] * 100 if counts["total"] > 0 else 0
             bd_rows.append({
-                "Model":       m,
-                "Total":       counts["total"],
-                "OFF":         counts["OFF"],
-                "NOT":         counts["NOT"],
+                "Model":        m,
+                "Total":        counts["total"],
+                "OFF":          counts["OFF"],
+                "NOT":          counts["NOT"],
                 "OFF Rate (%)": round(off_rate, 1)
             })
         st.dataframe(pd.DataFrame(bd_rows))
 
-        # Recent predictions table
         st.subheader("Recent Predictions")
         recent_df = pd.DataFrame(records[-20:][::-1])
         st.dataframe(recent_df)

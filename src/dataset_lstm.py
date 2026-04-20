@@ -21,7 +21,7 @@ class Vocabulary:
     def build_vocab(self, sentences):
         counter = Counter()
         for sentence in sentences:
-            tokens = preprocess(sentence).split()  # preprocess before counting
+            tokens = preprocess(sentence).split()
             counter.update(tokens)
 
         most_common = counter.most_common(self.max_size - 2)
@@ -47,18 +47,19 @@ def pad_sequence(seq, max_len):
 
 
 class OLIDDataset(Dataset):
-    def __init__(self, text_series, label_series, vocab, max_len=25):  # fixed default
-        self.texts = text_series
+    def __init__(self, text_series, label_series, vocab, max_len=25):
+        self.texts  = text_series
         self.labels = label_series
-        self.vocab = vocab
+        self.vocab  = vocab
         self.max_len = max_len
 
     def __len__(self):
         return len(self.texts)
 
     def __getitem__(self, idx):
-        text = preprocess(self.texts.iloc[idx])  # use shared preprocess()
-        sequence = self.vocab.numericalize(text)
-        padded = pad_sequence(sequence, self.max_len)
-        label = 1 if self.labels.iloc[idx] == "OFF" else 0
+        text      = preprocess(self.texts.iloc[idx])
+        sequence  = self.vocab.numericalize(text)
+        padded    = pad_sequence(sequence, self.max_len)
+        raw_label = self.labels.iloc[idx]
+        label     = int(raw_label)  # works for int, float, numpy.int64, and string digits
         return torch.tensor(padded), torch.tensor(label)

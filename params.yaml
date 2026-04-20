@@ -15,3 +15,20 @@ bert:
   batch_size: 32
   epochs: 1
   learning_rate: 0.00002
+
+subtasks:
+  a:
+    column: "subtask_a"
+    labels: ["NOT", "OFF"]
+    test_file: "data/testset-levela.tsv"
+    labels_file: "data/labels-levela.csv"
+  b:
+    column: "subtask_b"
+    labels: ["TIN", "UNT"]
+    test_file: "data/testset-levelb.tsv"
+    labels_file: "data/labels-levelb.csv"
+  c:
+    column: "subtask_c"
+    labels: ["IND", "GRP", "OTH"]
+    test_file: "data/testset-levelc.tsv"
+    labels_file: "data/labels-levelc.csv"
