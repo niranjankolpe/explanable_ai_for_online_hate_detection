@@ -10,12 +10,12 @@ stages:
       nfiles: 9
     - path: src/train_baseline.py
       hash: md5
-      md5: 5dd11e8f18e449b57d967dbe6544b1b4
-      size: 3185
+      md5: 40b5d0991ba59ab5f22b59750abea898
+      size: 3318
     outs:
     - path: models/baseline_a
       hash: md5
-      md5: ba988ac59927997200142827b385fb04.dir
+      md5: 8caa0ea16e021ccc53be41f61a51dced.dir
       size: 460360
       nfiles: 2
   evaluate:
@@ -28,17 +28,17 @@ stages:
       nfiles: 9
     - path: models/baseline_a
       hash: md5
-      md5: ba988ac59927997200142827b385fb04.dir
+      md5: 8caa0ea16e021ccc53be41f61a51dced.dir
       size: 460360
       nfiles: 2
     - path: models/baseline_b
       hash: md5
-      md5: d1102e6f8ea006f830f860f974d81d67.dir
+      md5: a7e466e5ea4dd095e06c83b31c5aaed3.dir
       size: 462564
       nfiles: 2
     - path: models/baseline_c
       hash: md5
-      md5: e57a31455bdcafd8e2dea5aefa297f89.dir
+      md5: 535e58516bb508215a795b8b9766cc7d.dir
       size: 622885
       nfiles: 2
     - path: models/bert_a
@@ -177,7 +177,7 @@ stages:
     deps:
     - path: models/baseline_a
       hash: md5
-      md5: ba988ac59927997200142827b385fb04.dir
+      md5: 8caa0ea16e021ccc53be41f61a51dced.dir
       size: 460360
       nfiles: 2
     - path: models/bert_a
@@ -239,12 +239,12 @@ stages:
       nfiles: 9
     - path: src/train_baseline.py
       hash: md5
-      md5: 5dd11e8f18e449b57d967dbe6544b1b4
-      size: 3185
+      md5: 40b5d0991ba59ab5f22b59750abea898
+      size: 3318
     outs:
     - path: models/baseline_b
       hash: md5
-      md5: d1102e6f8ea006f830f860f974d81d67.dir
+      md5: a7e466e5ea4dd095e06c83b31c5aaed3.dir
       size: 462564
       nfiles: 2
   train_c:
@@ -257,12 +257,12 @@ stages:
       nfiles: 9
     - path: src/train_baseline.py
       hash: md5
-      md5: 5dd11e8f18e449b57d967dbe6544b1b4
-      size: 3185
+      md5: 40b5d0991ba59ab5f22b59750abea898
+      size: 3318
     outs:
     - path: models/baseline_c
       hash: md5
-      md5: e57a31455bdcafd8e2dea5aefa297f89.dir
+      md5: 535e58516bb508215a795b8b9766cc7d.dir
       size: 622885
       nfiles: 2
   train_lstm_b:

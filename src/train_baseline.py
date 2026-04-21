@@ -12,9 +12,14 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report
 import mlflow
 import mlflow.sklearn
 
+with open("params.yaml") as f:
+    params = yaml.safe_load(f)
+
+baseline_params   = params["baseline"]
+TEST_SIZE    = baseline_params["test_size"]
+
 DATA_PATH    = "data/olid-training-v1.0.tsv"
 RANDOM_STATE = 42
-TEST_SIZE    = 0.2
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)

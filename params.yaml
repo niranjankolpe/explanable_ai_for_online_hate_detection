@@ -1,3 +1,6 @@
+baseline:
+  test_size: 0.2
+
 lstm:
   vocab_size: 20000
   embedding_dim: 128
