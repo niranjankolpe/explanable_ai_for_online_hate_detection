@@ -60,7 +60,10 @@ def get_model_breakdown(records):
     for r in records:
         m = r["model"]
         if m not in breakdown:
-            breakdown[m] = {"total": 0, "OFF": 0, "NOT": 0}
+            breakdown[m] = {"total": 0}
         breakdown[m]["total"] += 1
-        breakdown[m][r["label"]] += 1
+        label = r["label"]
+        if label not in breakdown[m]:
+            breakdown[m][label] = 0
+        breakdown[m][label] += 1
     return breakdown

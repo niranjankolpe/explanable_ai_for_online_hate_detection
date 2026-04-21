@@ -47,76 +47,88 @@ with tab1:
     st.subheader("Classify Text")
     text         = st.text_area("Enter text to classify", key="pred_text")
     model_choice = st.selectbox("Select Model", ["baseline", "lstm", "bert"])
-    subtask      = st.selectbox("Select Subtask", [
-        "A — Offensive vs Not Offensive",
-        "B — Targeted vs Untargeted (offensive only)",
-        "C — Target Identification (targeted only)"
-    ])
-    subtask_key = subtask[0].lower()
 
     if st.button("Predict"):
         if not text.strip():
             st.warning("Please enter some text.")
-        elif all_models.get(subtask_key) is None:
-            st.error(f"Subtask {subtask_key.upper()} models not loaded. Train them first.")
+        elif all_models.get("a") is None:
+            st.error("Subtask A model not loaded. Train it first.")
         else:
-            labels = params["subtasks"][subtask_key]["labels"]
-
+            # ── Step 1: Subtask A ──────────────────────────────────────────
             if model_choice == "baseline":
-                baseline_model, vectorizer = all_models[subtask_key]["baseline"]
-                X          = vectorizer.transform([text.lower()])
-                label      = baseline_model.predict(X)[0]
-                proba      = baseline_model.predict_proba(X)[0]
-                confidence = float(max(proba))
-                log_prediction(text, f"baseline_{subtask_key}", label, confidence)
-
+                baseline_a, vec_a = all_models["a"]["baseline"]
+                X_a       = vec_a.transform([text.lower()])
+                label_a   = baseline_a.predict(X_a)[0]
+                proba_a   = baseline_a.predict_proba(X_a)[0]
+                conf_a    = float(max(proba_a))
             elif model_choice == "bert":
-                bert_model, tokenizer = all_models[subtask_key]["bert"]
-                label, confidence = predict_bert(text, bert_model, tokenizer, BERT_MAX_LEN, subtask_key)
-                log_prediction(text, f"bert_{subtask_key}", label, confidence)
-
+                bert_a, tok_a   = all_models["a"]["bert"]
+                label_a, conf_a = predict_bert(text, bert_a, tok_a, BERT_MAX_LEN, "a")
             else:
-                lstm_model, vocab    = all_models[subtask_key]["lstm"]
-                label, confidence    = predict(text, lstm_model, vocab, subtask_key)
-                log_prediction(text, f"lstm_{subtask_key}", label, confidence)
+                lstm_a, vocab_a = all_models["a"]["lstm"]
+                label_a, conf_a = predict(text, lstm_a, vocab_a, "a")
 
-            color = "red" if label in ["OFF", "TIN", "IND", "GRP"] else "green"
-            st.markdown(f"**Subtask {subtask_key.upper()} Label:** :{color}[{label}]")
-            st.write(f"**Confidence:** {confidence:.4f}")
+            log_prediction(text, f"{model_choice}_a", label_a, conf_a)
 
-            # Hierarchical prediction for Subtask A
-            if subtask_key == "a" and label == "OFF" and all_models.get("b"):
-                st.markdown("---")
-                st.markdown("**Subtask B (Offense Type):**")
-                if model_choice == "baseline":
-                    baseline_b, vec_b = all_models["b"]["baseline"]
-                    X_b    = vec_b.transform([text.lower()])
-                    label_b = baseline_b.predict(X_b)[0]
-                elif model_choice == "bert":
-                    bert_b, tok_b = all_models["b"]["bert"]
-                    idx_b, conf_b = predict_bert(text, bert_b, tok_b, BERT_MAX_LEN)
-                    label_b, conf_b = predict_bert(text, bert_b, tok_b, BERT_MAX_LEN, "b")
+            color_a = "red" if label_a == "OFF" else "green"
+            st.markdown("### Subtask A — Offensive Language Detection")
+            st.markdown(f"**Label:** :{color_a}[{label_a}] &nbsp;&nbsp; **Confidence:** {conf_a:.4f}")
+
+            if label_a == "NOT":
+                st.success("Text is not offensive. No further analysis needed.")
+
+            # ── Step 2: Subtask B (only if OFF) ───────────────────────────
+            elif label_a == "OFF":
+                if all_models.get("b") is None:
+                    st.warning("Subtask B model not loaded.")
                 else:
-                    lstm_b, vocab_b = all_models["b"]["lstm"]
-                    label_b, _      = predict(text, lstm_b, vocab_b, "b")
-                st.write(f"**{label_b}** ({'Targeted Insult' if label_b == 'TIN' else 'Untargeted'})")
-
-                if label_b == "TIN" and all_models.get("c"):
-                    st.markdown("**Subtask C (Target):**")
                     if model_choice == "baseline":
-                        baseline_c, vec_c = all_models["c"]["baseline"]
-                        X_c     = vec_c.transform([text.lower()])
-                        label_c = baseline_c.predict(X_c)[0]
+                        baseline_b, vec_b = all_models["b"]["baseline"]
+                        X_b       = vec_b.transform([text.lower()])
+                        label_b   = baseline_b.predict(X_b)[0]
+                        proba_b   = baseline_b.predict_proba(X_b)[0]
+                        conf_b    = float(max(proba_b))
                     elif model_choice == "bert":
-                        bert_c, tok_c = all_models["c"]["bert"]
-                        idx_c, conf_c = predict_bert(text, bert_c, tok_c, BERT_MAX_LEN)
-                        label_c, conf_c = predict_bert(text, bert_c, tok_c, BERT_MAX_LEN, "c")
+                        bert_b, tok_b   = all_models["b"]["bert"]
+                        label_b, conf_b = predict_bert(text, bert_b, tok_b, BERT_MAX_LEN, "b")
                     else:
-                        lstm_c, vocab_c = all_models["c"]["lstm"]
-                        label_c, _      = predict(text, lstm_c, vocab_c, "c")
-                    target_map = {"IND": "Individual", "GRP": "Group", "OTH": "Other"}
-                    st.write(f"**{label_c}** ({target_map.get(label_c, label_c)})")
+                        lstm_b, vocab_b = all_models["b"]["lstm"]
+                        label_b, conf_b = predict(text, lstm_b, vocab_b, "b")
 
+                    log_prediction(text, f"{model_choice}_b", label_b, conf_b)
+
+                    type_map = {"TIN": "Targeted Insult/Threat", "UNT": "Untargeted Profanity"}
+                    color_b  = "red" if label_b == "TIN" else "orange"
+                    st.markdown("### Subtask B — Offense Type")
+                    st.markdown(f"**Label:** :{color_b}[{label_b}] — {type_map.get(label_b, label_b)} &nbsp;&nbsp; **Confidence:** {conf_b:.4f}")
+
+                    if label_b == "UNT":
+                        st.info("Offense is untargeted (general profanity). No target identification needed.")
+
+                    # ── Step 3: Subtask C (only if TIN) ───────────────────
+                    elif label_b == "TIN":
+                        if all_models.get("c") is None:
+                            st.warning("Subtask C model not loaded.")
+                        else:
+                            if model_choice == "baseline":
+                                baseline_c, vec_c = all_models["c"]["baseline"]
+                                X_c       = vec_c.transform([text.lower()])
+                                label_c   = baseline_c.predict(X_c)[0]
+                                proba_c   = baseline_c.predict_proba(X_c)[0]
+                                conf_c    = float(max(proba_c))
+                            elif model_choice == "bert":
+                                bert_c, tok_c   = all_models["c"]["bert"]
+                                label_c, conf_c = predict_bert(text, bert_c, tok_c, BERT_MAX_LEN, "c")
+                            else:
+                                lstm_c, vocab_c = all_models["c"]["lstm"]
+                                label_c, conf_c = predict(text, lstm_c, vocab_c, "c")
+
+                            log_prediction(text, f"{model_choice}_c", label_c, conf_c)
+
+                            target_map = {"IND": "Individual", "GRP": "Group", "OTH": "Other"}
+                            color_c    = "red"
+                            st.markdown("### Subtask C — Target Identification")
+                            st.markdown(f"**Label:** :{color_c}[{label_c}] — {target_map.get(label_c, label_c)} &nbsp;&nbsp; **Confidence:** {conf_c:.4f}")
 # ── Tab 2: Explanation ─────────────────────────────────────────────────────────
 with tab2:
     st.subheader("LIME + SHAP Explanation (LSTM only)")
@@ -241,15 +253,15 @@ with tab4:
 
         st.subheader("Predictions by Model")
         breakdown = get_model_breakdown(records)
-        bd_rows   = []
+        bd_rows = []
         for m, counts in breakdown.items():
-            off_rate = counts["OFF"] / counts["total"] * 100 if counts["total"] > 0 else 0
+            total = counts["total"]
+            labels = {k: v for k, v in counts.items() if k != "total"}
+            label_str = "  |  ".join(f"{k}: {v}" for k, v in sorted(labels.items()))
             bd_rows.append({
-                "Model":        m,
-                "Total":        counts["total"],
-                "OFF":          counts["OFF"],
-                "NOT":          counts["NOT"],
-                "OFF Rate (%)": round(off_rate, 1)
+                "Model":    m,
+                "Total":    total,
+                "Labels":   label_str,
             })
         st.dataframe(pd.DataFrame(bd_rows))
 

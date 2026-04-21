@@ -58,17 +58,17 @@ stages:
       nfiles: 4
     - path: models/lstm_a
       hash: md5
-      md5: 1d0f13a52702d0b5b512fea62e5fa45e.dir
+      md5: a93407ea7dc68a29dc66aab975dbd0d6.dir
       size: 12049622
       nfiles: 2
     - path: models/lstm_b
       hash: md5
-      md5: 39d5dc3fe00ea1144dd65d69a685caf8.dir
+      md5: df4fc9c3560ad6115bf3fde2cde7e4e2.dir
       size: 7559103
       nfiles: 2
     - path: models/lstm_c
       hash: md5
-      md5: 9488c09dc36a30c04a9fcba057dec13c.dir
+      md5: cbdd15d58e26942fb9f2deedfa2ee12b.dir
       size: 7307908
       nfiles: 2
     - path: src/dataset_lstm.py
@@ -108,8 +108,8 @@ stages:
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: 7abab707013844bb8f6618297b6d75cc
-      size: 1175
+      md5: d5e69fb7c40925e2aad7b1f2467bde0f
+      size: 1162
   train_lstm:
     cmd: python src/train_lstm.py a
     deps:
@@ -127,8 +127,8 @@ stages:
       size: 1322
     - path: src/train_lstm.py
       hash: md5
-      md5: ca832a98371024be2156707e370fc8c9
-      size: 7167
+      md5: ee2fe0d3addd5d94872c8a0d9217069d
+      size: 7447
     params:
       params.yaml:
         lstm:
@@ -144,7 +144,7 @@ stages:
     outs:
     - path: models/lstm_a
       hash: md5
-      md5: 1d0f13a52702d0b5b512fea62e5fa45e.dir
+      md5: a93407ea7dc68a29dc66aab975dbd0d6.dir
       size: 12049622
       nfiles: 2
   train_bert:
@@ -187,7 +187,7 @@ stages:
       nfiles: 4
     - path: models/lstm_a
       hash: md5
-      md5: 1d0f13a52702d0b5b512fea62e5fa45e.dir
+      md5: a93407ea7dc68a29dc66aab975dbd0d6.dir
       size: 12049622
       nfiles: 2
     - path: src/bias_analysis.py
@@ -227,8 +227,8 @@ stages:
     outs:
     - path: reports/bias_report.json
       hash: md5
-      md5: 85a66c2a085a2d116115fc86b98300ff
-      size: 11924
+      md5: 451d3171c2b402faf8da1836d9bc86e5
+      size: 11926
   train_b:
     cmd: python src/train_baseline.py b
     deps:
@@ -282,8 +282,8 @@ stages:
       size: 1322
     - path: src/train_lstm.py
       hash: md5
-      md5: ca832a98371024be2156707e370fc8c9
-      size: 7167
+      md5: ee2fe0d3addd5d94872c8a0d9217069d
+      size: 7447
     params:
       params.yaml:
         lstm:
@@ -299,7 +299,7 @@ stages:
     outs:
     - path: models/lstm_b
       hash: md5
-      md5: 39d5dc3fe00ea1144dd65d69a685caf8.dir
+      md5: df4fc9c3560ad6115bf3fde2cde7e4e2.dir
       size: 7559103
       nfiles: 2
   train_lstm_c:
@@ -319,8 +319,8 @@ stages:
       size: 1322
     - path: src/train_lstm.py
       hash: md5
-      md5: ca832a98371024be2156707e370fc8c9
-      size: 7167
+      md5: ee2fe0d3addd5d94872c8a0d9217069d
+      size: 7447
     params:
       params.yaml:
         lstm:
@@ -336,7 +336,7 @@ stages:
     outs:
     - path: models/lstm_c
       hash: md5
-      md5: 9488c09dc36a30c04a9fcba057dec13c.dir
+      md5: cbdd15d58e26942fb9f2deedfa2ee12b.dir
       size: 7307908
       nfiles: 2
   train_bert_b:

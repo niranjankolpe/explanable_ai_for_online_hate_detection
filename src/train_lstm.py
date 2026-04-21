@@ -116,7 +116,11 @@ def train_subtask(subtask):
     print(f"Using device: {device}")
     model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    label_counts  = Counter(y_train)
+    total         = sum(label_counts.values())
+    weights       = [total / (len(label_counts) * label_counts[i]) for i in range(num_classes)]
+    weight_tensor = torch.tensor(weights, dtype=torch.float).to(device)
+    criterion     = nn.CrossEntropyLoss(weight=weight_tensor)
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     val_acc, val_f1, avg_loss = 0, 0, 0
