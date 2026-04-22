@@ -25,6 +25,9 @@ with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
 
+
+
+
 def load_data(path):
     return pd.read_csv(path, sep="\t")
 
@@ -92,6 +95,7 @@ def train_subtask(subtask):
     mlflow.log_metric("val_accuracy",    acc)
     mlflow.log_metric("val_f1_weighted", f1)
     mlflow.sklearn.log_model(model, f"baseline_model_subtask_{subtask}")
+    mlflow.sklearn.log_model(model, f"baseline_tfidf_vectorizer_subtask_{subtask}")
     mlflow.end_run()
 
     print(f"Subtask {subtask.upper()} | Acc: {acc:.4f} | F1: {f1:.4f}")
