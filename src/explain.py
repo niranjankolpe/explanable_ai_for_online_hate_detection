@@ -29,7 +29,7 @@ def explain_with_shap(texts, predict_fn):
         reverse=True
     )[:6]
     for token, score in token_value_pairs:
-        result[token] = float(score)
+        result[token.strip()] = float(score)
     return result
 
 
@@ -38,5 +38,5 @@ def explain_prediction(text, predict_fn):
     shap_explanation = explain_with_shap([text], predict_fn)
     return {
         "lime": lime_explanation,
-        "shap": shap_explanation
+        "shap": shap_explanation,
     }
