@@ -19,7 +19,7 @@ from predict import load_model, predict_proba
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
-SAMPLE_SIZE  = 100
+SAMPLE_SIZE = 100
 NUM_FEATURES = 6
 RANDOM_SEED  = 42
 DATA_PATH    = "data/olid-training-v1.0.tsv"

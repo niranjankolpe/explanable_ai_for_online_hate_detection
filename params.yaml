@@ -1,37 +1,41 @@
 baseline:
   test_size: 0.2
-
-lstm:
-  vocab_size:    20000
-  embedding_dim: 128
-  hidden_dim:    128
-  num_layers:    2
-  dropout:       0.5
-  max_len:       25
-  batch_size:    64
-  epochs:        12
-  learning_rate: 0.0005
-
 bert:
-  model_name:    "distilbert-base-uncased"
-  max_len:       64        # tweets are short; 64 tokens sufficient and saves memory
-  batch_size:    16        # reduced from 32 for low-config PC
-  epochs:        1
-  learning_rate: 0.00002
-
+  batch_size: 32
+  epochs: 3
+  learning_rate: 2.0e-05
+  max_len: 128
+  model_name: distilbert-base-uncased
+lstm:
+  batch_size: 128
+  dropout: 0.5
+  embedding_dim: 128
+  epochs: 15
+  hidden_dim: 128
+  learning_rate: 0.0005
+  max_len: 25
+  num_layers: 2
+  vocab_size: 20000
 subtasks:
   a:
-    column:      "subtask_a"
-    labels:      ["NOT", "OFF"]
-    test_file:   "data/testset-levela.tsv"
-    labels_file: "data/labels-levela.csv"
+    column: subtask_a
+    labels:
+    - NOT
+    - 'OFF'
+    labels_file: data/labels-levela.csv
+    test_file: data/testset-levela.tsv
   b:
-    column:      "subtask_b"
-    labels:      ["TIN", "UNT"]
-    test_file:   "data/testset-levelb.tsv"
-    labels_file: "data/labels-levelb.csv"
+    column: subtask_b
+    labels:
+    - TIN
+    - UNT
+    labels_file: data/labels-levelb.csv
+    test_file: data/testset-levelb.tsv
   c:
-    column:      "subtask_c"
-    labels:      ["IND", "GRP", "OTH"]
-    test_file:   "data/testset-levelc.tsv"
-    labels_file: "data/labels-levelc.csv"
+    column: subtask_c
+    labels:
+    - IND
+    - GRP
+    - OTH
+    labels_file: data/labels-levelc.csv
+    test_file: data/testset-levelc.tsv

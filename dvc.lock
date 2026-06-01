@@ -28,48 +28,48 @@ stages:
       nfiles: 9
     - path: models/baseline_a
       hash: md5
-      md5: 37d49081b220e64b1b3b501e1de6e39b.dir
-      size: 460360
+      md5: 43c219028b09c30e89d34b731d6f5ec3.dir
+      size: 460357
       nfiles: 2
     - path: models/baseline_b
       hash: md5
-      md5: a339b2fa056a9675e0b832591611d336.dir
-      size: 462564
+      md5: bddae2a2cd3400b0c85188bcf7c42455.dir
+      size: 462561
       nfiles: 2
     - path: models/baseline_c
       hash: md5
-      md5: a2ac5f762aef4ea0c0b5103ed8d51138.dir
-      size: 622885
+      md5: 4554a76c0ac420c3b84a24983d714640.dir
+      size: 622882
       nfiles: 2
     - path: models/bert_a
       hash: md5
-      md5: 4edf5f039ab3215d5b25341127064d7f.dir
-      size: 268545229
+      md5: 3e4022f2138ff6d2fe9cfb154be61438.dir
+      size: 268545190
       nfiles: 4
     - path: models/bert_b
       hash: md5
-      md5: 8d41070ec15054e99be0c949eb1112c9.dir
-      size: 268545229
+      md5: c739c44ddbec79b8e7b01d5021e84760.dir
+      size: 268545190
       nfiles: 4
     - path: models/bert_c
       hash: md5
-      md5: bd81b1faf457d8e1509f2fd1d77e01b2.dir
-      size: 268548477
+      md5: 56816b6f6ca359a48ab7ec5f94d399e5.dir
+      size: 268548428
       nfiles: 4
     - path: models/lstm_a
       hash: md5
-      md5: bb8707db02f6e32bb2f57bd370999adc.dir
-      size: 12049622
+      md5: 42c28849b8655d6343850a22d4f3f8db.dir
+      size: 12046938
       nfiles: 2
     - path: models/lstm_b
       hash: md5
-      md5: e3b8cc8cd06c1ae7e43b1f874d9d75e9.dir
-      size: 7559103
+      md5: 6cba2a25efb51ad0eb78610a97423f77.dir
+      size: 7556419
       nfiles: 2
     - path: models/lstm_c
       hash: md5
-      md5: 6c7ec07a719e6e0090f2a48a75d494ad.dir
-      size: 7307908
+      md5: a71bafca34c0582d1a95b990a575732d.dir
+      size: 7305224
       nfiles: 2
     - path: src/evaluate.py
       hash: md5
@@ -77,8 +77,8 @@ stages:
       size: 2821
     - path: src/predict.py
       hash: md5
-      md5: 20d7fa9c2e3c5e64b67a17b2162e4e81
-      size: 4349
+      md5: eadb17823c65195deb0c37e035e5db42
+      size: 4347
     - path: src/preprocess.py
       hash: md5
       md5: c670ed7320ec5cfafc97cd4764076780
@@ -86,49 +86,49 @@ stages:
     params:
       params.yaml:
         bert:
-          model_name: distilbert-base-uncased
-          max_len: 64
-          batch_size: 16
-          epochs: 1
+          batch_size: 32
+          epochs: 3
           learning_rate: 2e-05
+          max_len: 128
+          model_name: distilbert-base-uncased
         lstm:
-          vocab_size: 20000
-          embedding_dim: 128
-          hidden_dim: 128
-          num_layers: 2
+          batch_size: 128
           dropout: 0.5
-          max_len: 25
-          batch_size: 64
-          epochs: 12
+          embedding_dim: 128
+          epochs: 15
+          hidden_dim: 128
           learning_rate: 0.0005
+          max_len: 25
+          num_layers: 2
+          vocab_size: 20000
         subtasks:
           a:
             column: subtask_a
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: a96632db1bec3588e0585ab4a4f4c112
-      size: 403
+      md5: 23da88b75d58b3df6fcee3ed66dbfaed
+      size: 388
   train_lstm:
     cmd: python src/train_lstm.py a
     deps:
@@ -196,18 +196,18 @@ stages:
     deps:
     - path: models/baseline_a
       hash: md5
-      md5: 37d49081b220e64b1b3b501e1de6e39b.dir
-      size: 460360
+      md5: 43c219028b09c30e89d34b731d6f5ec3.dir
+      size: 460357
       nfiles: 2
     - path: models/bert_a
       hash: md5
-      md5: 4edf5f039ab3215d5b25341127064d7f.dir
-      size: 268545229
+      md5: 3e4022f2138ff6d2fe9cfb154be61438.dir
+      size: 268545190
       nfiles: 4
     - path: models/lstm_a
       hash: md5
-      md5: bb8707db02f6e32bb2f57bd370999adc.dir
-      size: 12049622
+      md5: 42c28849b8655d6343850a22d4f3f8db.dir
+      size: 12046938
       nfiles: 2
     - path: src/bias_analysis.py
       hash: md5
@@ -215,8 +215,8 @@ stages:
       size: 2698
     - path: src/predict.py
       hash: md5
-      md5: 20d7fa9c2e3c5e64b67a17b2162e4e81
-      size: 4349
+      md5: eadb17823c65195deb0c37e035e5db42
+      size: 4347
     - path: src/preprocess.py
       hash: md5
       md5: c670ed7320ec5cfafc97cd4764076780
@@ -224,8 +224,8 @@ stages:
     outs:
     - path: reports/bias_report.json
       hash: md5
-      md5: 1694897681bc79873de28f041c69374b
-      size: 12830
+      md5: 0eabd003079a00ac7fed183e00710c91
+      size: 12431
   train_b:
     cmd: python src/train_baseline.py b
     deps:
@@ -399,8 +399,8 @@ stages:
       size: 567
     - path: src/train_baseline.py
       hash: md5
-      md5: e695217585c4bfafe0bb8fbbb9ac1f1b
-      size: 2591
+      md5: 44a13b835aef3ff22f313a974186b989
+      size: 2564
     params:
       params.yaml:
         baseline:
@@ -411,28 +411,28 @@ stages:
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/baseline_a
       hash: md5
-      md5: 37d49081b220e64b1b3b501e1de6e39b.dir
-      size: 460360
+      md5: 43c219028b09c30e89d34b731d6f5ec3.dir
+      size: 460357
       nfiles: 2
   train_baseline@${item}@b:
     cmd: python src/train_baseline.py b
@@ -447,8 +447,8 @@ stages:
       size: 567
     - path: src/train_baseline.py
       hash: md5
-      md5: e695217585c4bfafe0bb8fbbb9ac1f1b
-      size: 2591
+      md5: 44a13b835aef3ff22f313a974186b989
+      size: 2564
     params:
       params.yaml:
         baseline:
@@ -459,28 +459,28 @@ stages:
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/baseline_b
       hash: md5
-      md5: a339b2fa056a9675e0b832591611d336.dir
-      size: 462564
+      md5: bddae2a2cd3400b0c85188bcf7c42455.dir
+      size: 462561
       nfiles: 2
   train_baseline@${item}@c:
     cmd: python src/train_baseline.py c
@@ -495,8 +495,8 @@ stages:
       size: 567
     - path: src/train_baseline.py
       hash: md5
-      md5: e695217585c4bfafe0bb8fbbb9ac1f1b
-      size: 2591
+      md5: 44a13b835aef3ff22f313a974186b989
+      size: 2564
     params:
       params.yaml:
         baseline:
@@ -507,28 +507,28 @@ stages:
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/baseline_c
       hash: md5
-      md5: a2ac5f762aef4ea0c0b5103ed8d51138.dir
-      size: 622885
+      md5: 4554a76c0ac420c3b84a24983d714640.dir
+      size: 622882
       nfiles: 2
   train_lstm@${item}@a:
     cmd: python src/train_lstm.py a
@@ -551,48 +551,48 @@ stages:
       size: 567
     - path: src/train_lstm.py
       hash: md5
-      md5: 4c6657411d8f51d2301790d7ad748aca
-      size: 5235
+      md5: ea3096919b72159882997a90218d256f
+      size: 5168
     params:
       params.yaml:
         lstm:
-          vocab_size: 20000
-          embedding_dim: 128
-          hidden_dim: 128
-          num_layers: 2
+          batch_size: 128
           dropout: 0.5
-          max_len: 25
-          batch_size: 64
-          epochs: 12
+          embedding_dim: 128
+          epochs: 15
+          hidden_dim: 128
           learning_rate: 0.0005
+          max_len: 25
+          num_layers: 2
+          vocab_size: 20000
         subtasks:
           a:
             column: subtask_a
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/lstm_a
       hash: md5
-      md5: bb8707db02f6e32bb2f57bd370999adc.dir
-      size: 12049622
+      md5: 42c28849b8655d6343850a22d4f3f8db.dir
+      size: 12046938
       nfiles: 2
   train_lstm@${item}@b:
     cmd: python src/train_lstm.py b
@@ -615,48 +615,48 @@ stages:
       size: 567
     - path: src/train_lstm.py
       hash: md5
-      md5: 4c6657411d8f51d2301790d7ad748aca
-      size: 5235
+      md5: ea3096919b72159882997a90218d256f
+      size: 5168
     params:
       params.yaml:
         lstm:
-          vocab_size: 20000
-          embedding_dim: 128
-          hidden_dim: 128
-          num_layers: 2
+          batch_size: 128
           dropout: 0.5
-          max_len: 25
-          batch_size: 64
-          epochs: 12
+          embedding_dim: 128
+          epochs: 15
+          hidden_dim: 128
           learning_rate: 0.0005
+          max_len: 25
+          num_layers: 2
+          vocab_size: 20000
         subtasks:
           a:
             column: subtask_a
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/lstm_b
       hash: md5
-      md5: e3b8cc8cd06c1ae7e43b1f874d9d75e9.dir
-      size: 7559103
+      md5: 6cba2a25efb51ad0eb78610a97423f77.dir
+      size: 7556419
       nfiles: 2
   train_lstm@${item}@c:
     cmd: python src/train_lstm.py c
@@ -679,48 +679,48 @@ stages:
       size: 567
     - path: src/train_lstm.py
       hash: md5
-      md5: 4c6657411d8f51d2301790d7ad748aca
-      size: 5235
+      md5: ea3096919b72159882997a90218d256f
+      size: 5168
     params:
       params.yaml:
         lstm:
-          vocab_size: 20000
-          embedding_dim: 128
-          hidden_dim: 128
-          num_layers: 2
+          batch_size: 128
           dropout: 0.5
-          max_len: 25
-          batch_size: 64
-          epochs: 12
+          embedding_dim: 128
+          epochs: 15
+          hidden_dim: 128
           learning_rate: 0.0005
+          max_len: 25
+          num_layers: 2
+          vocab_size: 20000
         subtasks:
           a:
             column: subtask_a
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/lstm_c
       hash: md5
-      md5: 6c7ec07a719e6e0090f2a48a75d494ad.dir
-      size: 7307908
+      md5: a71bafca34c0582d1a95b990a575732d.dir
+      size: 7305224
       nfiles: 2
   train_bert@${item}@a:
     cmd: python src/train_bert.py a
@@ -740,39 +740,39 @@ stages:
     params:
       params.yaml:
         bert:
-          model_name: distilbert-base-uncased
-          max_len: 64
-          batch_size: 16
-          epochs: 1
+          batch_size: 32
+          epochs: 3
           learning_rate: 2e-05
+          max_len: 128
+          model_name: distilbert-base-uncased
         subtasks:
           a:
             column: subtask_a
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/bert_a
       hash: md5
-      md5: 4edf5f039ab3215d5b25341127064d7f.dir
-      size: 268545229
+      md5: 3e4022f2138ff6d2fe9cfb154be61438.dir
+      size: 268545190
       nfiles: 4
   train_bert@${item}@b:
     cmd: python src/train_bert.py b
@@ -792,39 +792,39 @@ stages:
     params:
       params.yaml:
         bert:
-          model_name: distilbert-base-uncased
-          max_len: 64
-          batch_size: 16
-          epochs: 1
+          batch_size: 32
+          epochs: 3
           learning_rate: 2e-05
+          max_len: 128
+          model_name: distilbert-base-uncased
         subtasks:
           a:
             column: subtask_a
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/bert_b
       hash: md5
-      md5: 8d41070ec15054e99be0c949eb1112c9.dir
-      size: 268545229
+      md5: c739c44ddbec79b8e7b01d5021e84760.dir
+      size: 268545190
       nfiles: 4
   train_bert@${item}@c:
     cmd: python src/train_bert.py c
@@ -844,37 +844,37 @@ stages:
     params:
       params.yaml:
         bert:
-          model_name: distilbert-base-uncased
-          max_len: 64
-          batch_size: 16
-          epochs: 1
+          batch_size: 32
+          epochs: 3
           learning_rate: 2e-05
+          max_len: 128
+          model_name: distilbert-base-uncased
         subtasks:
           a:
             column: subtask_a
             labels:
             - NOT
             - OFF
-            test_file: data/testset-levela.tsv
             labels_file: data/labels-levela.csv
+            test_file: data/testset-levela.tsv
           b:
             column: subtask_b
             labels:
             - TIN
             - UNT
-            test_file: data/testset-levelb.tsv
             labels_file: data/labels-levelb.csv
+            test_file: data/testset-levelb.tsv
           c:
             column: subtask_c
             labels:
             - IND
             - GRP
             - OTH
-            test_file: data/testset-levelc.tsv
             labels_file: data/labels-levelc.csv
+            test_file: data/testset-levelc.tsv
     outs:
     - path: models/bert_c
       hash: md5
-      md5: bd81b1faf457d8e1509f2fd1d77e01b2.dir
-      size: 268548477
+      md5: 56816b6f6ca359a48ab7ec5f94d399e5.dir
+      size: 268548428
       nfiles: 4
