@@ -31,7 +31,6 @@ with open("params.yaml") as f:
 def train(subtask: str) -> None:
     cfg    = params["subtasks"][subtask]
     column = cfg["column"]
-    labels = cfg["labels"]
 
     print(f"\nTraining Baseline — Subtask {subtask.upper()}")
 

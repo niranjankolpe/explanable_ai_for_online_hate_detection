@@ -22,7 +22,7 @@ import mlflow
 import mlflow.pytorch
 
 from dataset import Vocabulary, OLIDDataset
-from model   import BiLSTMClassifier
+from model import BiLSTMClassifier
 
 DATA_PATH    = "data/olid-training-v1.0.tsv"
 RANDOM_STATE = 42
@@ -130,9 +130,7 @@ def train(subtask: str) -> None:
             print(classification_report(val_targets, val_preds, labels=present,
                                         target_names=[labels[i] for i in present]))
 
-            mlflow.log_metrics({"loss": avg_loss, "train_acc": train_acc,
-                                 "train_f1": train_f1, "val_acc": val_acc, "val_f1": val_f1},
-                                step=epoch)
+            mlflow.log_metrics({"loss": avg_loss, "train_acc": train_acc, "train_f1": train_f1, "val_acc": val_acc, "val_f1": val_f1}, step=epoch)
 
         mlflow.log_metrics({"final_val_acc": val_acc, "final_val_f1": val_f1})
 
