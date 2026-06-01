@@ -16,11 +16,11 @@ import pandas as pd
 import yaml
 import joblib
 
-from predict       import load_model, predict_proba, get_label_conf
-from explain       import explain_prediction
-from monitor       import log_prediction, load_logs, compute_drift, get_model_breakdown
+from predict import load_model, predict_proba, get_label_conf
+from explain import explain_prediction
+from monitor import log_prediction, load_logs, compute_drift, get_model_breakdown
 from bias_analysis import run_bias_analysis
-from preprocess    import preprocess_lstm
+from preprocess import preprocess_lstm
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
@@ -146,7 +146,8 @@ with tab2:
             st.subheader("LIME Explanation")
             fig1, lime_df = plot_bar(explanation["lime"], "LIME Word Importance",
                                      "Score  (positive → OFF,  negative → NOT)")
-            st.pyplot(fig1); plt.close(fig1)
+            st.pyplot(fig1)
+            plt.close(fig1)
             st.markdown(word_highlight(words, explanation["lime"]), unsafe_allow_html=True)
             st.caption("🔴 Red = pushes toward OFF   |   🟢 Green = pushes toward NOT")
             st.dataframe(lime_df)
@@ -156,7 +157,8 @@ with tab2:
             st.subheader("SHAP Explanation")
             fig2, shap_df = plot_bar(explanation["shap"], "SHAP Word Importance (Shapley Values)",
                                      "SHAP Value  (positive → OFF,  negative → NOT)")
-            st.pyplot(fig2); plt.close(fig2)
+            st.pyplot(fig2)
+            plt.close(fig2)
             st.markdown(word_highlight(words, explanation["shap"]), unsafe_allow_html=True)
             st.caption("🔴 Red = pushes toward OFF   |   🟢 Green = pushes toward NOT")
             st.dataframe(shap_df)
@@ -182,7 +184,8 @@ with tab2:
             ax3.set_title("LIME vs SHAP — Word Score Comparison")
             ax3.legend()
             plt.tight_layout()
-            st.pyplot(fig3); plt.close(fig3)
+            st.pyplot(fig3)
+            plt.close(fig3)
             st.caption("LIME: local linear approximation. SHAP: Shapley values from cooperative game theory.")
 
 
@@ -258,7 +261,8 @@ with tab4:
         st.subheader("Recent Predictions")
         st.dataframe(pd.DataFrame(records[-20:][::-1]))
 
+        log_file = "logs/predictions.log"
         if st.button("Clear Logs"):
-            os.remove(LOG_FILE) if os.path.exists(LOG_FILE) else None
+            os.remove(log_file) if os.path.exists(log_file) else None
             st.success("Logs cleared.")
             st.rerun()

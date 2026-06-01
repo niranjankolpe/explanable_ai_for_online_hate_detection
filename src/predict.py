@@ -16,7 +16,7 @@ import numpy as np
 import yaml
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 
-from model   import BiLSTMClassifier
+from model import BiLSTMClassifier
 from dataset import pad_sequence
 from preprocess import preprocess_common, preprocess_lstm
 
