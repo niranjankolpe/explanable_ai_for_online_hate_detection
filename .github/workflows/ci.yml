@@ -28,7 +28,7 @@ jobs:
           flake8 src/ --max-line-length=120 --ignore=E402,W503,E221,E241,E225,W292,E123,E125,F401,E741,E265,E302,E501,F541,W293,E303,E226,F841
 
       - name: Run tests
-        run: python src/test.py
+        run: python tests/test_core.py
 
   # deploy:
   #   needs: test
