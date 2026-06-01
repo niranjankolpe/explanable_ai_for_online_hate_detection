@@ -1,98 +1,116 @@
-import sys
-import yaml
+"""
+predict.py
+Unified prediction interface for all three models.
+
+Usage:
+    model, aux = load_model("baseline", subtask="a")
+    proba       = predict_proba("some text", "baseline", model, aux)
+    label, conf = get_label_conf(proba, subtask="a")
+"""
+
 import pickle
+import joblib
 
 import torch
+import numpy as np
+import yaml
+from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 
-try:
-    from .model_lstm import LSTMClassifier
-    from .dataset_lstm import pad_sequence, preprocess
-except ImportError:
-    from model_lstm import LSTMClassifier
-    from dataset_lstm import pad_sequence, preprocess
+from model   import BiLSTMClassifier
+from dataset import pad_sequence
+from preprocess import preprocess_common, preprocess_lstm
 
 with open("params.yaml") as f:
-    params = yaml.safe_load(f)
+    _params = yaml.safe_load(f)
 
-lstm_params   = params["lstm"]
-MAX_LEN       = lstm_params["max_len"]
-EMBEDDING_DIM = lstm_params["embedding_dim"]
-HIDDEN_DIM    = lstm_params["hidden_dim"]
-NUM_LAYERS    = lstm_params["num_layers"]
-DROPOUT       = lstm_params["dropout"]
+_lstm_p = _params["lstm"]
+_bert_p = _params["bert"]
 
 
-def load_model(subtask="a"):
-    vocab_path = f"models/lstm_{subtask}/lstm_vocab.pkl"
-    model_path = f"models/lstm_{subtask}/lstm_model.pt"
-    labels     = params["subtasks"][subtask]["labels"]
+# ── Loaders ───────────────────────────────────────────────────────────────────
 
-    with open(vocab_path, "rb") as f:
-        vocab = pickle.load(f)
+def load_model(model_type: str, subtask: str = "a"):
+    """
+    Returns (model, aux) where aux is:
+      baseline → (sklearn_model, vectorizer)
+      lstm     → (BiLSTMClassifier, vocab_dict)
+      bert     → (DistilBert, tokenizer)
+    """
+    if model_type == "baseline":
+        model      = joblib.load(f"models/baseline_{subtask}/baseline_model.pkl")
+        vectorizer = joblib.load(f"models/baseline_{subtask}/tfidf_vectorizer.pkl")
+        return model, vectorizer
 
-    model = LSTMClassifier(
-        vocab_size=max(vocab.values()) + 1,
-        embedding_dim=EMBEDDING_DIM,
-        hidden_dim=HIDDEN_DIM,
-        num_layers=NUM_LAYERS,
-        dropout=DROPOUT,
-        num_classes=len(labels)
-    )
-    model.load_state_dict(
-        torch.load(model_path, map_location=torch.device("cpu"))
-    )
-    model.eval()
-    return model, vocab
+    if model_type == "lstm":
+        with open(f"models/lstm_{subtask}/lstm_vocab.pkl", "rb") as f:
+            vocab = pickle.load(f)
+        labels     = _params["subtasks"][subtask]["labels"]
+        model = BiLSTMClassifier(
+            vocab_size=max(vocab.values()) + 1,
+            embedding_dim=_lstm_p["embedding_dim"],
+            hidden_dim=_lstm_p["hidden_dim"],
+            num_layers=_lstm_p["num_layers"],
+            dropout=_lstm_p["dropout"],
+            num_classes=len(labels),
+        )
+        model.load_state_dict(
+            torch.load(f"models/lstm_{subtask}/lstm_model.pt", map_location="cpu")
+        )
+        model.eval()
+        return model, vocab
 
+    if model_type == "bert":
+        model_dir = f"models/bert_{subtask}"
+        tokenizer = DistilBertTokenizerFast.from_pretrained(model_dir)
+        model     = DistilBertForSequenceClassification.from_pretrained(model_dir)
+        model.eval()
+        return model, tokenizer
 
-def predict(text, model, vocab, subtask="a"):
-    labels = params["subtasks"][subtask]["labels"]
-    text   = preprocess(text)
-    tokens = text.split()
-    seq    = [vocab[t] if t in vocab else vocab["<UNK>"] for t in tokens]
-    seq    = pad_sequence(seq, MAX_LEN)
-    inputs = torch.tensor([seq])
-
-    with torch.no_grad():
-        outputs    = model(inputs)
-        probs      = torch.softmax(outputs, dim=1)
-        confidence, pred = torch.max(probs, dim=1)
-
-    label = labels[pred.item()]
-    return label, confidence.item()
-
-
-def predict_proba(texts, model, vocab):
-    sequences = []
-    for text in texts:
-        text = preprocess(text)
-        if not text:
-            seq = [vocab["<UNK>"]]
-        else:
-            tokens = text.split()
-            seq    = [vocab[t] if t in vocab else vocab["<UNK>"] for t in tokens]
-        seq = pad_sequence(seq, MAX_LEN)
-        sequences.append(seq)
-
-    inputs = torch.tensor(sequences)
-    with torch.no_grad():
-        outputs = model(inputs)
-        probs   = torch.softmax(outputs, dim=1).numpy()
-    return probs
+    raise ValueError(f"Unknown model_type: {model_type}")
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python predict.py \"text\" [subtask]")
-        return
-    text    = sys.argv[1]
-    subtask = sys.argv[2] if len(sys.argv) > 2 else "a"
-    model, vocab = load_model(subtask)
-    label, confidence = predict(text, model, vocab, subtask)
-    print(f"Input: {text}")
-    print(f"Subtask {subtask.upper()} Prediction: {label}")
-    print(f"Confidence: {round(confidence, 4)}")
+# ── Proba functions ───────────────────────────────────────────────────────────
+
+def predict_proba(texts: list, model_type: str, model, aux) -> np.ndarray:
+    """Returns probability array of shape (n_samples, n_classes)."""
+
+    if model_type == "baseline":
+        model, vectorizer = model, aux
+        cleaned  = [preprocess_common(t) for t in texts]
+        X        = vectorizer.transform(cleaned)
+        return model.predict_proba(X)
+
+    if model_type == "lstm":
+        vocab = aux
+        seqs  = []
+        for text in texts:
+            text = preprocess_lstm(text)
+            seq  = [vocab.get(t, vocab["<UNK>"]) for t in text.split()] if text else [vocab["<UNK>"]]
+            seqs.append(pad_sequence(seq, _lstm_p["max_len"]))
+        inputs = torch.tensor(seqs)
+        with torch.no_grad():
+            return torch.softmax(model(inputs), dim=1).numpy()
+
+    if model_type == "bert":
+        tokenizer = aux
+        cleaned   = [preprocess_common(t) for t in texts]
+        enc = tokenizer(
+            cleaned,
+            max_length=_bert_p["max_len"],
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt",
+        )
+        with torch.no_grad():
+            return torch.softmax(model(**enc).logits, dim=1).numpy()
+
+    raise ValueError(f"Unknown model_type: {model_type}")
 
 
-if __name__ == "__main__":
-    main()
+# ── Helper ────────────────────────────────────────────────────────────────────
+
+def get_label_conf(proba: np.ndarray, subtask: str = "a") -> tuple:
+    """Converts single-sample proba array to (label_str, confidence)."""
+    labels     = _params["subtasks"][subtask]["labels"]
+    idx        = int(np.argmax(proba))
+    return labels[idx], float(proba[idx])

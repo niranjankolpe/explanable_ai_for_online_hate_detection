@@ -28,71 +28,67 @@ stages:
       nfiles: 9
     - path: models/baseline_a
       hash: md5
-      md5: b92e71eb9a0766c1b76a73e827b7d7ae.dir
+      md5: 37d49081b220e64b1b3b501e1de6e39b.dir
       size: 460360
       nfiles: 2
     - path: models/baseline_b
       hash: md5
-      md5: 7db847ce30fea412da9d307b141331ff.dir
+      md5: a339b2fa056a9675e0b832591611d336.dir
       size: 462564
       nfiles: 2
     - path: models/baseline_c
       hash: md5
-      md5: d6876743cb4d9c0fbc8810c4ee18ba37.dir
+      md5: a2ac5f762aef4ea0c0b5103ed8d51138.dir
       size: 622885
       nfiles: 2
     - path: models/bert_a
       hash: md5
-      md5: 60b3742341b77d3e21a0565f3fbeb88c.dir
-      size: 268545231
+      md5: 4edf5f039ab3215d5b25341127064d7f.dir
+      size: 268545229
       nfiles: 4
     - path: models/bert_b
       hash: md5
-      md5: 42b2a65f44e5a4eab271a2e9e6c3ffb1.dir
-      size: 268545231
+      md5: 8d41070ec15054e99be0c949eb1112c9.dir
+      size: 268545229
       nfiles: 4
     - path: models/bert_c
       hash: md5
-      md5: 2fd155c9b7b64bb7656c005d5214f09f.dir
-      size: 268548479
+      md5: bd81b1faf457d8e1509f2fd1d77e01b2.dir
+      size: 268548477
       nfiles: 4
     - path: models/lstm_a
       hash: md5
-      md5: a93407ea7dc68a29dc66aab975dbd0d6.dir
+      md5: bb8707db02f6e32bb2f57bd370999adc.dir
       size: 12049622
       nfiles: 2
     - path: models/lstm_b
       hash: md5
-      md5: df4fc9c3560ad6115bf3fde2cde7e4e2.dir
+      md5: e3b8cc8cd06c1ae7e43b1f874d9d75e9.dir
       size: 7559103
       nfiles: 2
     - path: models/lstm_c
       hash: md5
-      md5: cbdd15d58e26942fb9f2deedfa2ee12b.dir
+      md5: 6c7ec07a719e6e0090f2a48a75d494ad.dir
       size: 7307908
       nfiles: 2
-    - path: src/dataset_lstm.py
-      hash: md5
-      md5: 045e5f8f8bc3ec15e0fcb31dc3d34f16
-      size: 1979
     - path: src/evaluate.py
       hash: md5
-      md5: 2db8f000c58769a479a31466ffb1ffbd
-      size: 5814
-    - path: src/model_lstm.py
+      md5: 44755c5674fefae59d49da4b10ff5acb
+      size: 2821
+    - path: src/predict.py
       hash: md5
-      md5: 1dd768049827204f34b444387148885b
-      size: 1322
-    - path: src/predict_bert.py
+      md5: 20d7fa9c2e3c5e64b67a17b2162e4e81
+      size: 4349
+    - path: src/preprocess.py
       hash: md5
-      md5: 3040d0085a4566863d54215ac5427161
-      size: 1596
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
     params:
       params.yaml:
         bert:
           model_name: distilbert-base-uncased
-          max_len: 128
-          batch_size: 32
+          max_len: 64
+          batch_size: 16
           epochs: 1
           learning_rate: 2e-05
         lstm:
@@ -105,11 +101,34 @@ stages:
           batch_size: 64
           epochs: 12
           learning_rate: 0.0005
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: d5e69fb7c40925e2aad7b1f2467bde0f
-      size: 1162
+      md5: a96632db1bec3588e0585ab4a4f4c112
+      size: 403
   train_lstm:
     cmd: python src/train_lstm.py a
     deps:
@@ -177,58 +196,36 @@ stages:
     deps:
     - path: models/baseline_a
       hash: md5
-      md5: b92e71eb9a0766c1b76a73e827b7d7ae.dir
+      md5: 37d49081b220e64b1b3b501e1de6e39b.dir
       size: 460360
       nfiles: 2
     - path: models/bert_a
       hash: md5
-      md5: 60b3742341b77d3e21a0565f3fbeb88c.dir
-      size: 268545231
+      md5: 4edf5f039ab3215d5b25341127064d7f.dir
+      size: 268545229
       nfiles: 4
     - path: models/lstm_a
       hash: md5
-      md5: a93407ea7dc68a29dc66aab975dbd0d6.dir
+      md5: bb8707db02f6e32bb2f57bd370999adc.dir
       size: 12049622
       nfiles: 2
     - path: src/bias_analysis.py
       hash: md5
-      md5: 27c6e3cd69b09c7d714c500acffbcc37
-      size: 4951
-    - path: src/dataset_lstm.py
+      md5: 92bb8fff1d9fea6e402135f9e304cdc8
+      size: 2698
+    - path: src/predict.py
       hash: md5
-      md5: 045e5f8f8bc3ec15e0fcb31dc3d34f16
-      size: 1979
-    - path: src/model_lstm.py
+      md5: 20d7fa9c2e3c5e64b67a17b2162e4e81
+      size: 4349
+    - path: src/preprocess.py
       hash: md5
-      md5: 1dd768049827204f34b444387148885b
-      size: 1322
-    - path: src/predict_bert.py
-      hash: md5
-      md5: 3040d0085a4566863d54215ac5427161
-      size: 1596
-    params:
-      params.yaml:
-        bert:
-          model_name: distilbert-base-uncased
-          max_len: 128
-          batch_size: 32
-          epochs: 1
-          learning_rate: 2e-05
-        lstm:
-          vocab_size: 20000
-          embedding_dim: 128
-          hidden_dim: 128
-          num_layers: 2
-          dropout: 0.5
-          max_len: 25
-          batch_size: 64
-          epochs: 12
-          learning_rate: 0.0005
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
     outs:
     - path: reports/bias_report.json
       hash: md5
-      md5: 451d3171c2b402faf8da1836d9bc86e5
-      size: 11926
+      md5: 1694897681bc79873de28f041c69374b
+      size: 12830
   train_b:
     cmd: python src/train_baseline.py b
     deps:
@@ -388,4 +385,496 @@ stages:
       hash: md5
       md5: 2fd155c9b7b64bb7656c005d5214f09f.dir
       size: 268548479
+      nfiles: 4
+  train_baseline@${item}@a:
+    cmd: python src/train_baseline.py a
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_baseline.py
+      hash: md5
+      md5: e695217585c4bfafe0bb8fbbb9ac1f1b
+      size: 2591
+    params:
+      params.yaml:
+        baseline:
+          test_size: 0.2
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/baseline_a
+      hash: md5
+      md5: 37d49081b220e64b1b3b501e1de6e39b.dir
+      size: 460360
+      nfiles: 2
+  train_baseline@${item}@b:
+    cmd: python src/train_baseline.py b
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_baseline.py
+      hash: md5
+      md5: e695217585c4bfafe0bb8fbbb9ac1f1b
+      size: 2591
+    params:
+      params.yaml:
+        baseline:
+          test_size: 0.2
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/baseline_b
+      hash: md5
+      md5: a339b2fa056a9675e0b832591611d336.dir
+      size: 462564
+      nfiles: 2
+  train_baseline@${item}@c:
+    cmd: python src/train_baseline.py c
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_baseline.py
+      hash: md5
+      md5: e695217585c4bfafe0bb8fbbb9ac1f1b
+      size: 2591
+    params:
+      params.yaml:
+        baseline:
+          test_size: 0.2
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/baseline_c
+      hash: md5
+      md5: a2ac5f762aef4ea0c0b5103ed8d51138.dir
+      size: 622885
+      nfiles: 2
+  train_lstm@${item}@a:
+    cmd: python src/train_lstm.py a
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/dataset.py
+      hash: md5
+      md5: de5f6ef99a4de37b13442b007a87587c
+      size: 1670
+    - path: src/model.py
+      hash: md5
+      md5: ba6ba7839176121d66690adfd3432514
+      size: 1207
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_lstm.py
+      hash: md5
+      md5: 4c6657411d8f51d2301790d7ad748aca
+      size: 5235
+    params:
+      params.yaml:
+        lstm:
+          vocab_size: 20000
+          embedding_dim: 128
+          hidden_dim: 128
+          num_layers: 2
+          dropout: 0.5
+          max_len: 25
+          batch_size: 64
+          epochs: 12
+          learning_rate: 0.0005
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/lstm_a
+      hash: md5
+      md5: bb8707db02f6e32bb2f57bd370999adc.dir
+      size: 12049622
+      nfiles: 2
+  train_lstm@${item}@b:
+    cmd: python src/train_lstm.py b
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/dataset.py
+      hash: md5
+      md5: de5f6ef99a4de37b13442b007a87587c
+      size: 1670
+    - path: src/model.py
+      hash: md5
+      md5: ba6ba7839176121d66690adfd3432514
+      size: 1207
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_lstm.py
+      hash: md5
+      md5: 4c6657411d8f51d2301790d7ad748aca
+      size: 5235
+    params:
+      params.yaml:
+        lstm:
+          vocab_size: 20000
+          embedding_dim: 128
+          hidden_dim: 128
+          num_layers: 2
+          dropout: 0.5
+          max_len: 25
+          batch_size: 64
+          epochs: 12
+          learning_rate: 0.0005
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/lstm_b
+      hash: md5
+      md5: e3b8cc8cd06c1ae7e43b1f874d9d75e9.dir
+      size: 7559103
+      nfiles: 2
+  train_lstm@${item}@c:
+    cmd: python src/train_lstm.py c
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/dataset.py
+      hash: md5
+      md5: de5f6ef99a4de37b13442b007a87587c
+      size: 1670
+    - path: src/model.py
+      hash: md5
+      md5: ba6ba7839176121d66690adfd3432514
+      size: 1207
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_lstm.py
+      hash: md5
+      md5: 4c6657411d8f51d2301790d7ad748aca
+      size: 5235
+    params:
+      params.yaml:
+        lstm:
+          vocab_size: 20000
+          embedding_dim: 128
+          hidden_dim: 128
+          num_layers: 2
+          dropout: 0.5
+          max_len: 25
+          batch_size: 64
+          epochs: 12
+          learning_rate: 0.0005
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/lstm_c
+      hash: md5
+      md5: 6c7ec07a719e6e0090f2a48a75d494ad.dir
+      size: 7307908
+      nfiles: 2
+  train_bert@${item}@a:
+    cmd: python src/train_bert.py a
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_bert.py
+      hash: md5
+      md5: 610747066c0fae43db038a88a7933a53
+      size: 5331
+    params:
+      params.yaml:
+        bert:
+          model_name: distilbert-base-uncased
+          max_len: 64
+          batch_size: 16
+          epochs: 1
+          learning_rate: 2e-05
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/bert_a
+      hash: md5
+      md5: 4edf5f039ab3215d5b25341127064d7f.dir
+      size: 268545229
+      nfiles: 4
+  train_bert@${item}@b:
+    cmd: python src/train_bert.py b
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_bert.py
+      hash: md5
+      md5: 610747066c0fae43db038a88a7933a53
+      size: 5331
+    params:
+      params.yaml:
+        bert:
+          model_name: distilbert-base-uncased
+          max_len: 64
+          batch_size: 16
+          epochs: 1
+          learning_rate: 2e-05
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/bert_b
+      hash: md5
+      md5: 8d41070ec15054e99be0c949eb1112c9.dir
+      size: 268545229
+      nfiles: 4
+  train_bert@${item}@c:
+    cmd: python src/train_bert.py c
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/preprocess.py
+      hash: md5
+      md5: c670ed7320ec5cfafc97cd4764076780
+      size: 567
+    - path: src/train_bert.py
+      hash: md5
+      md5: 610747066c0fae43db038a88a7933a53
+      size: 5331
+    params:
+      params.yaml:
+        bert:
+          model_name: distilbert-base-uncased
+          max_len: 64
+          batch_size: 16
+          epochs: 1
+          learning_rate: 2e-05
+        subtasks:
+          a:
+            column: subtask_a
+            labels:
+            - NOT
+            - OFF
+            test_file: data/testset-levela.tsv
+            labels_file: data/labels-levela.csv
+          b:
+            column: subtask_b
+            labels:
+            - TIN
+            - UNT
+            test_file: data/testset-levelb.tsv
+            labels_file: data/labels-levelb.csv
+          c:
+            column: subtask_c
+            labels:
+            - IND
+            - GRP
+            - OTH
+            test_file: data/testset-levelc.tsv
+            labels_file: data/labels-levelc.csv
+    outs:
+    - path: models/bert_c
+      hash: md5
+      md5: bd81b1faf457d8e1509f2fd1d77e01b2.dir
+      size: 268548477
       nfiles: 4

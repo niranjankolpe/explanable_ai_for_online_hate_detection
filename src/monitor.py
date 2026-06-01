@@ -1,69 +1,75 @@
+"""
+monitor.py
+Logs predictions and detects label drift.
+"""
+
 import json
 import os
 from datetime import datetime
 
-PREDICTIONS_LOG = "logs/predictions.log"
-DRIFT_THRESHOLD = 0.6  # Alert if OFF rate exceeds 60% in recent window
-WINDOW_SIZE     = 20   # Number of recent predictions to check for drift
+LOG_FILE        = "logs/predictions.log"
+DRIFT_THRESHOLD = 0.6
+WINDOW_SIZE     = 20
 
 
-def log_prediction(text, model, label, confidence):
+def log_prediction(text: str, model: str, label: str, confidence: float) -> None:
     os.makedirs("logs", exist_ok=True)
     entry = {
         "timestamp":  datetime.now().isoformat(),
         "model":      model,
         "text":       text[:100],
         "label":      label,
-        "confidence": round(confidence, 4)
+        "confidence": round(confidence, 4),
     }
-    with open(PREDICTIONS_LOG, "a") as f:
+    with open(LOG_FILE, "a") as f:
         f.write(json.dumps(entry) + "\n")
 
 
-def load_logs():
-    if not os.path.exists(PREDICTIONS_LOG):
+def load_logs() -> list:
+    if not os.path.exists(LOG_FILE):
         return []
-    with open(PREDICTIONS_LOG, "r") as f:
-        lines = f.readlines()
     records = []
-    for line in lines:
-        line = line.strip()
-        if line:
-            try:
-                records.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
+    with open(LOG_FILE) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    records.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
     return records
 
 
-def compute_drift(records):
+def compute_drift(records: list) -> dict:
     if not records:
-        return None
-
-    recent   = records[-WINDOW_SIZE:]
+        return {
+            "total_predictions": 0,
+            "recent_window":     0,
+            "recent_off_count":  0,
+            "recent_off_rate":   0.0,
+            "drift_threshold":   DRIFT_THRESHOLD,
+            "drift_detected":    False,
+        }
+    recent    = records[-WINDOW_SIZE:]
     off_count = sum(1 for r in recent if r["label"] == "OFF")
     off_rate  = off_count / len(recent)
-    drift     = off_rate > DRIFT_THRESHOLD
-
     return {
-        "total_predictions":  len(records),
-        "recent_window":      len(recent),
-        "recent_off_count":   off_count,
-        "recent_off_rate":    round(off_rate, 4),
-        "drift_threshold":    DRIFT_THRESHOLD,
-        "drift_detected":     drift
+        "total_predictions": len(records),
+        "recent_window":     len(recent),
+        "recent_off_count":  off_count,
+        "recent_off_rate":   round(off_rate, 4),
+        "drift_threshold":   DRIFT_THRESHOLD,
+        "drift_detected":    off_rate > DRIFT_THRESHOLD,
     }
 
 
-def get_model_breakdown(records):
+def get_model_breakdown(records: list) -> dict:
     breakdown = {}
     for r in records:
         m = r["model"]
         if m not in breakdown:
             breakdown[m] = {"total": 0}
         breakdown[m]["total"] += 1
-        label = r["label"]
-        if label not in breakdown[m]:
-            breakdown[m][label] = 0
-        breakdown[m][label] += 1
+        breakdown[m].setdefault(r["label"], 0)
+        breakdown[m][r["label"]] += 1
     return breakdown

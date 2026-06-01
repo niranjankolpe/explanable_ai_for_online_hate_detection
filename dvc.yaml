@@ -1,129 +1,80 @@
 stages:
-  train:
-    cmd: python src/train_baseline.py a
-    deps:
-    - data
-    - src/train_baseline.py
-    outs:
-    - models/baseline_a
 
-  train_b:
-    cmd: python src/train_baseline.py b
-    deps:
-    - data
-    - src/train_baseline.py
-    outs:
-    - models/baseline_b
+  train_baseline@${item}:
+    foreach: [a, b, c]
+    do:
+      cmd: python src/train_baseline.py ${item}
+      deps:
+        - data/olid-training-v1.0.tsv
+        - src/train_baseline.py
+        - src/preprocess.py
+      params:
+        - baseline
+        - subtasks
+      outs:
+        - models/baseline_${item}
 
-  train_c:
-    cmd: python src/train_baseline.py c
-    deps:
-    - data
-    - src/train_baseline.py
-    outs:
-    - models/baseline_c
+  train_lstm@${item}:
+    foreach: [a, b, c]
+    do:
+      cmd: python src/train_lstm.py ${item}
+      deps:
+        - data/olid-training-v1.0.tsv
+        - src/train_lstm.py
+        - src/dataset.py
+        - src/model.py
+        - src/preprocess.py
+      params:
+        - lstm
+        - subtasks
+      outs:
+        - models/lstm_${item}
 
-  train_lstm:
-    cmd: python src/train_lstm.py a
-    deps:
-    - data/olid-training-v1.0.tsv
-    - src/dataset_lstm.py
-    - src/model_lstm.py
-    - src/train_lstm.py
-    params:
-    - lstm
-    outs:
-    - models/lstm_a
-
-  train_lstm_b:
-    cmd: python src/train_lstm.py b
-    deps:
-    - data/olid-training-v1.0.tsv
-    - src/dataset_lstm.py
-    - src/model_lstm.py
-    - src/train_lstm.py
-    params:
-    - lstm
-    outs:
-    - models/lstm_b
-
-  train_lstm_c:
-    cmd: python src/train_lstm.py c
-    deps:
-    - data/olid-training-v1.0.tsv
-    - src/dataset_lstm.py
-    - src/model_lstm.py
-    - src/train_lstm.py
-    params:
-    - lstm
-    outs:
-    - models/lstm_c
-
-  train_bert:
-    cmd: python src/train_bert.py a
-    deps:
-    - data/olid-training-v1.0.tsv
-    - src/train_bert.py
-    params:
-    - bert
-    outs:
-    - models/bert_a
-
-  train_bert_b:
-    cmd: python src/train_bert.py b
-    deps:
-    - data/olid-training-v1.0.tsv
-    - src/train_bert.py
-    params:
-    - bert
-    outs:
-    - models/bert_b
-
-  train_bert_c:
-    cmd: python src/train_bert.py c
-    deps:
-    - data/olid-training-v1.0.tsv
-    - src/train_bert.py
-    params:
-    - bert
-    outs:
-    - models/bert_c
+  train_bert@${item}:
+    foreach: [a, b, c]
+    do:
+      cmd: python src/train_bert.py ${item}
+      deps:
+        - data/olid-training-v1.0.tsv
+        - src/train_bert.py
+        - src/preprocess.py
+      params:
+        - bert
+        - subtasks
+      outs:
+        - models/bert_${item}
 
   evaluate:
     cmd: python src/evaluate.py
     deps:
-    - data
-    - models/baseline_a
-    - models/baseline_b
-    - models/baseline_c
-    - models/lstm_a
-    - models/lstm_b
-    - models/lstm_c
-    - models/bert_a
-    - models/bert_b
-    - models/bert_c
-    - src/evaluate.py
-    - src/model_lstm.py
-    - src/dataset_lstm.py
-    - src/predict_bert.py
+      - data
+      - src/evaluate.py
+      - src/predict.py
+      - src/preprocess.py
+      - models/baseline_a
+      - models/baseline_b
+      - models/baseline_c
+      - models/lstm_a
+      - models/lstm_b
+      - models/lstm_c
+      - models/bert_a
+      - models/bert_b
+      - models/bert_c
     params:
-    - lstm
-    - bert
+      - lstm
+      - bert
+      - subtasks
     metrics:
-    - reports/metrics.json
+      - reports/metrics.json
 
   bias_analysis:
     cmd: python src/bias_analysis.py
     deps:
-    - models/baseline_a
-    - models/lstm_a
-    - models/bert_a
-    - src/bias_analysis.py
-    - src/dataset_lstm.py
-    - src/model_lstm.py
-    - src/predict_bert.py
-    params:
-    - lstm
-    - bert
+      - src/bias_analysis.py
+      - src/predict.py
+      - src/preprocess.py
+      - models/baseline_a
+      - models/lstm_a
+      - models/bert_a
     outs:
-    - reports/bias_report.json
+      - reports/bias_report.json

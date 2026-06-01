@@ -1,3 +1,10 @@
+"""
+train_baseline.py
+TF-IDF + Logistic Regression baseline for subtask a/b/c.
+
+Usage: python src/train_baseline.py [a|b|c]
+"""
+
 import os
 import sys
 import joblib
@@ -12,11 +19,7 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report
 import mlflow
 import mlflow.sklearn
 
-with open("params.yaml") as f:
-    params = yaml.safe_load(f)
-
-baseline_params   = params["baseline"]
-TEST_SIZE    = baseline_params["test_size"]
+from preprocess import preprocess_common
 
 DATA_PATH    = "data/olid-training-v1.0.tsv"
 RANDOM_STATE = 42
@@ -25,90 +28,56 @@ with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
 
+def train(subtask: str) -> None:
+    cfg    = params["subtasks"][subtask]
+    column = cfg["column"]
+    labels = cfg["labels"]
 
+    print(f"\nTraining Baseline — Subtask {subtask.upper()}")
 
-
-def load_data(path):
-    return pd.read_csv(path, sep="\t")
-
-
-def preprocess_text(text_series):
-    return (
-        text_series
-        .str.lower()
-        .str.replace(r"http\S+", "", regex=True)
-        .str.replace(r"@\w+", "", regex=True)
-        .str.strip()
-    )
-
-
-def train_subtask(subtask):
-    subtask_config = params["subtasks"][subtask]
-    column         = subtask_config["column"]
-    labels         = subtask_config["labels"]
-
-    print(f"\nTraining baseline for Subtask {subtask.upper()}...")
-
-    mlflow.set_tracking_uri("sqlite:///mlflow.db")
-    mlflow.set_experiment(f"hate_detection_baseline_subtask_{subtask}")
-    mlflow.start_run()
-
-    mlflow.log_param("model",        "tfidf_logistic_regression")
-    mlflow.log_param("subtask",      subtask)
-    mlflow.log_param("labels",       str(labels))
-    mlflow.log_param("max_features", 10000)
-    mlflow.log_param("ngram_range",  "(1,2)")
-    mlflow.log_param("class_weight", "balanced")
-
-    df = load_data(DATA_PATH)
-    df["tweet"] = preprocess_text(df["tweet"])
-
-    # Filter rows where subtask column is not null
-    df = df[df[column].notna()].copy()
-    print(f"Subtask {subtask.upper()} training samples: {len(df)}")
-
-    X = df["tweet"]
-    y = df[column]
+    df           = pd.read_csv(DATA_PATH, sep="\t")
+    df["tweet"]  = df["tweet"].apply(preprocess_common)
+    df           = df[df[column].notna()].copy()
+    print(f"  Samples: {len(df)}")
 
     X_train, X_val, y_train, y_val = train_test_split(
-        X, y,
-        test_size=TEST_SIZE,
+        df["tweet"], df[column],
+        test_size=params["baseline"]["test_size"],
         random_state=RANDOM_STATE,
-        stratify=y
+        stratify=df[column],
     )
 
     vectorizer    = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_val_tfidf   = vectorizer.transform(X_val)
 
-    os.makedirs(f"models/baseline_{subtask}", exist_ok=True)
-    joblib.dump(vectorizer, f"models/baseline_{subtask}/tfidf_vectorizer.pkl")
-
     model = LogisticRegression(max_iter=1000, class_weight="balanced")
     model.fit(X_train_tfidf, y_train)
-    joblib.dump(model, f"models/baseline_{subtask}/baseline_model.pkl")
 
     preds = model.predict(X_val_tfidf)
     acc   = accuracy_score(y_val, preds)
     f1    = f1_score(y_val, preds, average="weighted")
 
-    mlflow.log_metric("val_accuracy",    acc)
-    mlflow.log_metric("val_f1_weighted", f1)
-    mlflow.sklearn.log_model(model, f"baseline_model_subtask_{subtask}")
-    mlflow.sklearn.log_model(model, f"baseline_tfidf_vectorizer_subtask_{subtask}")
-    mlflow.end_run()
+    out_dir = f"models/baseline_{subtask}"
+    os.makedirs(out_dir, exist_ok=True)
+    joblib.dump(vectorizer, f"{out_dir}/tfidf_vectorizer.pkl")
+    joblib.dump(model,      f"{out_dir}/baseline_model.pkl")
 
-    print(f"Subtask {subtask.upper()} | Acc: {acc:.4f} | F1: {f1:.4f}")
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
+    mlflow.set_experiment(f"baseline_subtask_{subtask}")
+    with mlflow.start_run():
+        mlflow.log_params({"subtask": subtask, "max_features": 10000, "ngram_range": "(1,2)"})
+        mlflow.log_metric("val_accuracy",    acc)
+        mlflow.log_metric("val_f1_weighted", f1)
+        mlflow.sklearn.log_model(model, "baseline_model")
+
+    print(f"  Val Acc: {acc:.4f} | Val F1: {f1:.4f}")
     print(classification_report(y_val, preds))
 
 
-def main():
+if __name__ == "__main__":
     subtask = sys.argv[1] if len(sys.argv) > 1 else "a"
     if subtask not in ["a", "b", "c"]:
-        print("Usage: python train_baseline.py [a|b|c]")
-        return
-    train_subtask(subtask)
-
-
-if __name__ == "__main__":
-    main()
+        print("Usage: python src/train_baseline.py [a|b|c]")
+        sys.exit(1)
+    train(subtask)

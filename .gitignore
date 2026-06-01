@@ -1,11 +1,23 @@
-venv/
+# Data and models — tracked by DVC
 data/
-docs/
 models/
 reports/
+
+# Logs
 logs/
-mlruns/
+
+# MLflow
 mlflow.db
+mlruns/
+
+# Python
 __pycache__/
-*.pyc
-/data
+*.py[cod]
+*.egg-info/
+.env
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
