@@ -45,7 +45,7 @@ def train(subtask: str) -> None:
     df          = pd.read_csv(DATA_PATH, sep="\t")
     df          = df[df[column].notna()].copy()
     texts       = df["tweet"].astype(str).tolist()
-    label_list  = df[column].map(label2idx).tolist()    # FIX: assigned only once
+    label_list  = df[column].map(label2idx).tolist()
 
     X_train, X_val, y_train, y_val = train_test_split(
         texts, label_list,
@@ -90,7 +90,7 @@ def train(subtask: str) -> None:
     val_acc, val_f1, avg_loss = 0.0, 0.0, 0.0
 
     with mlflow.start_run():
-        mlflow.log_params({**p, "subtask": subtask})
+        mlflow.log_params({**p, "subtask": subtask, "preprocessing": "preprocess_common"})
 
         for epoch in range(p["epochs"]):
             model.train()
@@ -130,9 +130,9 @@ def train(subtask: str) -> None:
             print(classification_report(val_targets, val_preds, labels=present,
                                         target_names=[labels[i] for i in present]))
 
-            mlflow.log_metrics({"loss": avg_loss, "train_acc": train_acc, "train_f1": train_f1, "val_acc": val_acc, "val_f1": val_f1}, step=epoch)
+            mlflow.log_metrics({"loss": avg_loss, "train_acc": train_acc, "train_f1_weighted": train_f1, "val_acc": val_acc, "val_f1_weighted": val_f1}, step=epoch)
 
-        mlflow.log_metrics({"final_val_acc": val_acc, "final_val_f1": val_f1})
+        mlflow.log_metrics({"final_val_acc": val_acc, "final_val_f1_weighted": val_f1})
 
     out_dir = f"models/lstm_{subtask}"
     os.makedirs(out_dir, exist_ok=True)

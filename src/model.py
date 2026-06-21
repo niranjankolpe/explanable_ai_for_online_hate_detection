@@ -3,6 +3,7 @@ model.py
 Bidirectional LSTM classifier.
 """
 
+import torch
 import torch.nn as nn
 
 
@@ -42,6 +43,6 @@ class BiLSTMClassifier(nn.Module):
         embedded              = self.embedding(x)
         _, (hidden, _)        = self.lstm(embedded)
         hidden_cat            = self.dropout(
-            __import__("torch").cat((hidden[-2], hidden[-1]), dim=1)
+            torch.cat((hidden[-2], hidden[-1]), dim=1)
         )
         return self.fc(hidden_cat)

@@ -65,8 +65,8 @@ def train(subtask: str) -> None:
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment(f"baseline_subtask_{subtask}")
     with mlflow.start_run():
-        mlflow.log_params({"subtask": subtask, "max_features": 10000, "ngram_range": "(1,2)"})
-        mlflow.log_metric("val_accuracy",    acc)
+        mlflow.log_params({"subtask": subtask, "max_features": 10000, "ngram_range": "(1,2)", "preprocessing": "preprocess_common"})
+        mlflow.log_metric("val_acc",         acc)
         mlflow.log_metric("val_f1_weighted", f1)
         mlflow.sklearn.log_model(model, "baseline_model")
 

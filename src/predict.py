@@ -18,7 +18,7 @@ from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassific
 
 from model import BiLSTMClassifier
 from dataset import pad_sequence
-from preprocess import preprocess_common, preprocess_lstm
+from preprocess import preprocess_common
 
 with open("params.yaml") as f:
     _params = yaml.safe_load(f)
@@ -71,20 +71,26 @@ def load_model(model_type: str, subtask: str = "a"):
 
 # ── Proba functions ───────────────────────────────────────────────────────────
 
-def predict_proba(texts: list, model_type: str, model, aux) -> np.ndarray:
+def predict_proba(texts: list, model_type: str, model, aux, subtask: str = None) -> np.ndarray:
     """Returns probability array of shape (n_samples, n_classes)."""
 
     if model_type == "baseline":
         model, vectorizer = model, aux
-        cleaned  = [preprocess_common(t) for t in texts]
-        X        = vectorizer.transform(cleaned)
-        return model.predict_proba(X)
+        cleaned   = [preprocess_common(t) for t in texts]
+        X         = vectorizer.transform(cleaned)
+        raw_proba = model.predict_proba(X)
+        if subtask is not None:
+            # sklearn sorts model.classes_ alphabetically; reorder to match params.yaml label order
+            target_labels = _params["subtasks"][subtask]["labels"]
+            col_order = [list(model.classes_).index(lbl) for lbl in target_labels]
+            return raw_proba[:, col_order]
+        return raw_proba
 
     if model_type == "lstm":
         vocab = aux
         seqs  = []
         for text in texts:
-            text = preprocess_lstm(text)
+            text = preprocess_common(text)
             seq  = [vocab.get(t, vocab["<UNK>"]) for t in text.split()] if text else [vocab["<UNK>"]]
             seqs.append(pad_sequence(seq, _lstm_p["max_len"]))
         inputs = torch.tensor(seqs)

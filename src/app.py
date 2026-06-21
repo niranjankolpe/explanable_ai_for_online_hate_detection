@@ -20,7 +20,7 @@ from predict import load_model, predict_proba, get_label_conf
 from explain import explain_prediction
 from monitor import log_prediction, load_logs, compute_drift, get_model_breakdown
 from bias_analysis import run_bias_analysis
-from preprocess import preprocess_lstm
+from preprocess import preprocess_common
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
@@ -61,7 +61,7 @@ with tab1:
         else:
             def run_subtask(subtask):
                 model, aux  = all_models[subtask][model_choice]
-                proba       = predict_proba([text], model_choice, model, aux)
+                proba       = predict_proba([text], model_choice, model, aux, subtask)
                 label, conf = get_label_conf(proba[0], subtask)
                 log_prediction(text, f"{model_choice}_{subtask}", label, conf)
                 return label, conf
@@ -93,25 +93,26 @@ with tab1:
 # ── Tab 2: Explanation ────────────────────────────────────────────────────────
 with tab2:
     st.subheader("LIME + SHAP Explanation")
-    st.markdown("Explains which words drive the **Offensive (OFF) vs Not Offensive (NOT)** classification.")
-    exp_text = st.text_area("Enter text to explain", key="exp_text")
+    st.markdown("Explains which words drive the **Subtask A (OFF vs NOT)** classification for the selected model.")
+    exp_text  = st.text_area("Enter text to explain", key="exp_text")
+    exp_model = st.selectbox("Select Model to Explain", ["baseline", "lstm", "bert"], key="exp_model")
 
     if st.button("Explain"):
         if not exp_text.strip():
             st.warning("Please enter some text.")
-        elif all_models.get("a") is None:
-            st.error("Subtask A LSTM model not loaded.")
+        elif all_models.get("a") is None or all_models["a"].get(exp_model) is None:
+            st.error(f"Subtask A {exp_model} model not loaded.")
         else:
-            model, vocab = all_models["a"]["lstm"]
-            class_names  = params["subtasks"]["a"]["labels"]  # FIX: dynamic class names
+            model, aux  = all_models["a"][exp_model]
+            class_names = params["subtasks"]["a"]["labels"]
 
-            def lstm_proba(texts):
-                return predict_proba(texts, "lstm", model, vocab)
+            def explain_proba(texts):
+                return predict_proba(texts, exp_model, model, aux, "a")
 
             with st.spinner("Generating explanation (this may take a moment)..."):
-                explanation = explain_prediction(exp_text, lstm_proba, class_names)
+                explanation = explain_prediction(exp_text, explain_proba, class_names)
 
-            words = preprocess_lstm(exp_text).split()
+            words = preprocess_common(exp_text).split()
 
             def plot_bar(scores_dict, title, xlabel):
                 df    = pd.DataFrame(scores_dict.items(), columns=["Word", "Score"]).sort_values("Score", ascending=False)

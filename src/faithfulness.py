@@ -13,14 +13,15 @@ import random
 import pandas as pd
 import yaml
 
-from explain import explain_with_lime, explain_with_shap
+from explain import explain_with_lime, explain_with_shap, create_lime_explainer, create_shap_explainer
 from predict import load_model, predict_proba
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
-SAMPLE_SIZE = 100
+SAMPLE_SIZE  = 100
 NUM_FEATURES = 6
+LIME_SAMPLES = 300
 RANDOM_SEED  = 42
 DATA_PATH    = "data/olid-training-v1.0.tsv"
 
@@ -55,15 +56,21 @@ def run_faithfulness(subtask: str = "a") -> dict:
         model, aux = load_model(model_type, subtask)
 
         def predict_fn(texts):
-            return predict_proba(texts, model_type, model, aux)
+            return predict_proba(texts, model_type, model, aux, subtask)
+
+        lime_explainer = create_lime_explainer(class_names)
+        shap_explainer = create_shap_explainer(predict_fn)
 
         agreements = []
         failed     = 0
 
         for i, text in enumerate(sample_texts):
             try:
-                lime_exp = explain_with_lime(text, predict_fn, class_names, NUM_FEATURES)
-                shap_exp = explain_with_shap(text, predict_fn, NUM_FEATURES)
+                lime_exp = explain_with_lime(
+                    text, predict_fn, class_names, NUM_FEATURES,
+                    num_samples=LIME_SAMPLES, explainer=lime_explainer,
+                )
+                shap_exp = explain_with_shap(text, predict_fn, NUM_FEATURES, explainer=shap_explainer)
                 agreement = compute_agreement(lime_exp, shap_exp)
                 agreements.append(agreement)
             except Exception as e:
@@ -75,8 +82,6 @@ def run_faithfulness(subtask: str = "a") -> dict:
                 print(f"    {i+1}/{SAMPLE_SIZE} | Avg agreement so far: {avg_so_far:.2f}%")
 
         avg_agreement  = sum(agreements) / len(agreements) if agreements else 0.0
-        lime_only_rate = 0.0   # % of samples where only LIME found words (SHAP empty)
-        shap_only_rate = 0.0   # % of samples where only SHAP found words (LIME empty)
 
         results[model_type] = {
             "avg_agreement_pct":  round(avg_agreement, 2),

@@ -133,9 +133,9 @@ def train(subtask: str) -> None:
 
             print(f"  Loss: {avg_loss:.4f} | Val Acc: {val_acc:.4f} | Val F1: {val_f1:.4f}")
             print(classification_report(all_labels, all_preds, target_names=cfg["labels"]))
-            mlflow.log_metrics({"loss": avg_loss, "val_acc": val_acc, "val_f1": val_f1}, step=epoch)
+            mlflow.log_metrics({"loss": avg_loss, "val_acc": val_acc, "val_f1_weighted": val_f1}, step=epoch)
 
-        mlflow.log_metrics({"final_val_acc": val_acc, "final_val_f1": val_f1})
+        mlflow.log_metrics({"final_val_acc": val_acc, "final_val_f1_weighted": val_f1})
 
     out_dir = f"models/bert_{subtask}"
     os.makedirs(out_dir, exist_ok=True)

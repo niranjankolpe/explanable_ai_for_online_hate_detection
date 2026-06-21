@@ -29,7 +29,12 @@ def load_test_data(subtask: str) -> pd.DataFrame:
     return df[df["label"].notna()].copy()
 
 
-def evaluate_model(df: pd.DataFrame, model_type: str, subtask: str) -> dict:
+def evaluate_model(df: pd.DataFrame, model_type: str, subtask: str):
+    model_dir = f"models/{model_type}_{subtask}"
+    if not os.path.exists(model_dir):
+        print(f"  Skipping {model_type.upper()} — Subtask {subtask.upper()} (model not found)")
+        return None
+
     print(f"  Evaluating {model_type.upper()} — Subtask {subtask.upper()}...")
 
     cfg       = params["subtasks"][subtask]
@@ -40,7 +45,7 @@ def evaluate_model(df: pd.DataFrame, model_type: str, subtask: str) -> dict:
     texts      = df["tweet"].tolist()
     y_true     = df["label"].map(label2idx).tolist()
 
-    proba  = predict_proba(texts, model_type, model, aux)
+    proba  = predict_proba(texts, model_type, model, aux, subtask)
     preds  = proba.argmax(axis=1).tolist()
 
     acc = accuracy_score(y_true, preds)
@@ -57,7 +62,9 @@ def evaluate_subtask(subtask: str) -> dict:
     df      = load_test_data(subtask)
     results = {}
     for model_type in ["baseline", "lstm", "bert"]:
-        results[model_type] = evaluate_model(df, model_type, subtask)
+        r = evaluate_model(df, model_type, subtask)
+        if r is not None:
+            results[model_type] = r
 
     print(f"\n  Results:")
     for m, v in results.items():

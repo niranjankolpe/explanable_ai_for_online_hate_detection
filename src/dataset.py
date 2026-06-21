@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset
 from collections import Counter
 
-from preprocess import preprocess_lstm
+from preprocess import preprocess_common
 
 
 def pad_sequence(seq: list, max_len: int) -> list:
@@ -27,7 +27,7 @@ class Vocabulary:
     def build_vocab(self, sentences) -> None:
         counter = Counter()
         for sentence in sentences:
-            counter.update(preprocess_lstm(sentence).split())
+            counter.update(preprocess_common(sentence).split())
         for idx, (word, _) in enumerate(counter.most_common(self.max_size - 2), start=2):
             self.word2idx[word] = idx
             self.idx2word[idx]  = word
@@ -50,7 +50,7 @@ class OLIDDataset(Dataset):
         return len(self.texts)
 
     def __getitem__(self, idx):
-        text    = preprocess_lstm(self.texts.iloc[idx])
+        text    = preprocess_common(self.texts.iloc[idx])
         seq     = self.vocab.numericalize(text)
         padded  = pad_sequence(seq, self.max_len)
         label   = int(self.labels.iloc[idx])

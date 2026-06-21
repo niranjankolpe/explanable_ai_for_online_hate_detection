@@ -78,3 +78,19 @@ stages:
       - models/bert_a
     outs:
       - reports/bias_report.json
+
+  faithfulness@${item}:
+    foreach: [a, b, c]
+    do:
+      cmd: python src/faithfulness.py ${item}
+      deps:
+        - data/olid-training-v1.0.tsv
+        - src/faithfulness.py
+        - src/explain.py
+        - src/predict.py
+        - src/preprocess.py
+        - models/baseline_${item}
+        - models/lstm_${item}
+        - models/bert_${item}
+      outs:
+        - reports/faithfulness_${item}.json
