@@ -153,5 +153,81 @@ assert compute_agreement(lime6, shap_none) == 0.0
 assert compute_agreement({}, {})         == 0.0
 assert compute_agreement({"a": 1}, {})   == 0.0
 
+# ── crawler.scrape_text ───────────────────────────────────────────────────────
+from unittest.mock import patch, MagicMock
+from crawler import scrape_text, scrape_multiple
+
+def _mock_response(html, content_type="text/html"):
+    resp = MagicMock()
+    resp.text = html
+    resp.headers = {"Content-Type": content_type}
+    resp.raise_for_status = MagicMock()
+    return resp
+
+# Basic paragraph extraction
+with patch("crawler.requests.get") as mock_get:
+    mock_get.return_value = _mock_response(
+        "<html><body><p>This is a test sentence.</p><p>Another good paragraph here.</p></body></html>"
+    )
+    chunks = scrape_text("https://example.com")
+    assert len(chunks) == 2
+    assert "This is a test sentence." in chunks[0]
+    assert "Another good paragraph here." in chunks[1]
+
+# Strips script and style tags
+with patch("crawler.requests.get") as mock_get:
+    mock_get.return_value = _mock_response(
+        "<html><body><script>var x=1;</script><style>.a{}</style>"
+        "<p>Visible text here only.</p></body></html>"
+    )
+    chunks = scrape_text("https://example.com")
+    assert len(chunks) == 1
+    assert "Visible text here only." in chunks[0]
+
+# Filters short chunks (< 3 words)
+with patch("crawler.requests.get") as mock_get:
+    mock_get.return_value = _mock_response(
+        "<html><body><p>Hi</p><p>This is long enough to keep.</p></body></html>"
+    )
+    chunks = scrape_text("https://example.com")
+    assert len(chunks) == 1
+    assert "long enough" in chunks[0]
+
+# Empty page
+with patch("crawler.requests.get") as mock_get:
+    mock_get.return_value = _mock_response("<html><body></body></html>")
+    chunks = scrape_text("https://example.com")
+    assert chunks == []
+
+# Script-only page
+with patch("crawler.requests.get") as mock_get:
+    mock_get.return_value = _mock_response(
+        "<html><body><script>console.log('hello');</script></body></html>"
+    )
+    chunks = scrape_text("https://example.com")
+    assert chunks == []
+
+
+# ── crawler.scrape_multiple ───────────────────────────────────────────────────
+
+# Mix of success and failure
+with patch("crawler.scrape_text") as mock_scrape:
+    mock_scrape.side_effect = [
+        ["Good text chunk here."],
+        Exception("Connection timed out"),
+    ]
+    results = scrape_multiple(["https://good.com", "https://bad.com"])
+    assert results["https://good.com"]["status"] == "ok"
+    assert results["https://good.com"]["texts"]  == ["Good text chunk here."]
+    assert results["https://bad.com"]["status"]   == "error"
+    assert "timed out" in results["https://bad.com"]["error"]
+
+# Empty/whitespace URLs are skipped
+with patch("crawler.scrape_text") as mock_scrape:
+    mock_scrape.return_value = ["Some text content here."]
+    results = scrape_multiple(["https://a.com", "", "  "])
+    assert len(results) == 1
+    assert "https://a.com" in results
+
 
 print("All tests passed.")

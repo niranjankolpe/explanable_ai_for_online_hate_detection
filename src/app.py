@@ -21,6 +21,8 @@ from explain import explain_prediction
 from monitor import log_prediction, load_logs, compute_drift, get_model_breakdown
 from bias_analysis import run_bias_analysis
 from preprocess import preprocess_common
+from crawler import scrape_multiple, save_crawled_data
+from rag_engine import load_vector_store, retrieve_similar, generate_explanation
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
@@ -44,7 +46,9 @@ all_models = load_all_models()
 
 st.title("Explainable AI for Offensive Language Detection")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Prediction", "Explanation", "Bias Analysis", "Monitoring"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+    ["Prediction", "Explanation", "RAG Explainer", "Bias Analysis", "Data Collection", "Monitoring"]
+)
 
 
 # ── Tab 1: Prediction ─────────────────────────────────────────────────────────
@@ -190,8 +194,8 @@ with tab2:
             st.caption("LIME: local linear approximation. SHAP: Shapley values from cooperative game theory.")
 
 
-# ── Tab 3: Bias Analysis ──────────────────────────────────────────────────────
-with tab3:
+# ── Tab 4: Bias Analysis ──────────────────────────────────────────────────────
+with tab4:
     st.subheader("Responsible AI — Bias Analysis")
     st.markdown(
         "Tests all 3 models on neutral sentences containing identity terms "
@@ -229,8 +233,8 @@ with tab3:
                 } for e in entries]))
 
 
-# ── Tab 4: Monitoring ─────────────────────────────────────────────────────────
-with tab4:
+# ── Tab 6: Monitoring ─────────────────────────────────────────────────────────
+with tab6:
     st.subheader("Prediction Monitoring & Drift Detection")
     records = load_logs()
     drift   = compute_drift(records)
@@ -267,3 +271,215 @@ with tab4:
             os.remove(log_file) if os.path.exists(log_file) else None
             st.success("Logs cleared.")
             st.rerun()
+
+
+# ── Tab 3: RAG Explainer ──────────────────────────────────────────────────────
+with tab3:
+    st.subheader("AI-Powered Explanation (RAG)")
+    st.markdown(
+        "Uses **Retrieval-Augmented Generation** to explain predictions in plain language. "
+        "Retrieves similar tweets from the training data, combines with LIME/SHAP analysis, "
+        "and sends to Google Gemini for a human-readable explanation."
+    )
+
+    rag_text  = st.text_area("Enter text to explain", key="rag_text")
+    rag_model = st.selectbox("Select Model", ["baseline", "lstm", "bert"], key="rag_model")
+    rag_key   = st.text_input("Google API Key", type="password", key="rag_api_key",
+                              value=os.environ.get("GOOGLE_API_KEY", ""),
+                              help="Get a free key from https://aistudio.google.com/apikey")
+
+    # Check if vector store exists
+    _chroma_ready = os.path.exists("models/chroma_store")
+    if not _chroma_ready:
+        st.warning("ChromaDB vector store not built yet. Run: `python src/build_vector_store.py`")
+
+    if st.button("Explain with AI", disabled=not _chroma_ready):
+        if not rag_text.strip():
+            st.warning("Please enter some text.")
+        elif all_models.get("a") is None or all_models["a"].get(rag_model) is None:
+            st.error(f"Subtask A {rag_model} model not loaded.")
+        else:
+            with st.spinner("Generating explanation..."):
+                # 1. Predict
+                model, aux  = all_models["a"][rag_model]
+                proba       = predict_proba([rag_text], rag_model, model, aux, "a")
+                label, conf = get_label_conf(proba[0], "a")
+
+                # 2. LIME + SHAP
+                class_names = params["subtasks"]["a"]["labels"]
+                def rag_proba(texts):
+                    return predict_proba(texts, rag_model, model, aux, "a")
+                explanation = explain_prediction(rag_text, rag_proba, class_names)
+
+                # 3. Retrieve similar
+                try:
+                    collection = load_vector_store()
+                    similar    = retrieve_similar(rag_text, collection, k=5)
+                except Exception as e:
+                    similar = []
+                    st.warning(f"Could not retrieve similar tweets: {e}")
+
+                # 4. Generate LLM explanation
+                llm_explanation = generate_explanation(
+                    text=rag_text,
+                    model_name=rag_model,
+                    prediction=label,
+                    confidence=conf,
+                    lime_scores=explanation["lime"],
+                    shap_scores=explanation["shap"],
+                    similar_examples=similar,
+                    api_key=rag_key,
+                )
+
+            # Display results
+            color = "red" if label == "OFF" else "green"
+            st.markdown(f"### Prediction: :{color}[{label}] (confidence: {conf:.4f})")
+
+            st.markdown("### AI Explanation")
+            st.markdown(llm_explanation)
+
+            with st.expander("Similar tweets from training data"):
+                if similar:
+                    sim_df = pd.DataFrame([{
+                        "Tweet":   s["tweet"][:100],
+                        "Label A": s["label_a"],
+                        "Label B": s["label_b"],
+                        "Label C": s["label_c"],
+                    } for s in similar])
+                    st.dataframe(sim_df)
+                else:
+                    st.info("No similar tweets found.")
+
+            with st.expander("LIME + SHAP word scores"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("**LIME**")
+                    for word, score in sorted(explanation["lime"].items(),
+                                              key=lambda x: abs(x[1]), reverse=True):
+                        direction = "OFF" if score > 0 else "NOT"
+                        st.text(f"  {word}: {score:+.4f} ({direction})")
+                with col2:
+                    st.markdown("**SHAP**")
+                    for word, score in sorted(explanation["shap"].items(),
+                                              key=lambda x: abs(x[1]), reverse=True):
+                        direction = "OFF" if score > 0 else "NOT"
+                        st.text(f"  {word}: {score:+.4f} ({direction})")
+
+
+# ── Tab 5: Data Collection ────────────────────────────────────────────────────
+with tab5:
+    st.subheader("Web Data Collection")
+    st.markdown(
+        "Scrape text from web pages and run hate speech detection on the collected content. "
+        "Paste one URL per line. Results are saved to CSV."
+    )
+
+    urls_input = st.text_area(
+        "Enter URLs (one per line)",
+        placeholder="https://example.com/article1\nhttps://example.com/article2",
+        key="crawl_urls",
+        height=120,
+    )
+    crawl_model = st.selectbox("Select Model for Analysis", ["baseline", "lstm", "bert"], key="crawl_model")
+
+    # Clear results if model changes
+    if "last_crawl_model" in st.session_state and st.session_state["last_crawl_model"] != crawl_model:
+        if "crawled_results" in st.session_state:
+            del st.session_state["crawled_results"]
+    st.session_state["last_crawl_model"] = crawl_model
+
+    if st.button("Scrape & Analyze"):
+        urls = [u.strip() for u in urls_input.strip().split("\n") if u.strip()]
+        if not urls:
+            st.warning("Please enter at least one URL.")
+        elif all_models.get("a") is None or all_models["a"].get(crawl_model) is None:
+            st.error(f"Subtask A {crawl_model} model not loaded.")
+        else:
+            # 1. Scrape
+            with st.spinner(f"Scraping {len(urls)} URL(s)..."):
+                results = scrape_multiple(urls)
+
+            # Collect all text chunks
+            all_texts = []
+            for url, data in results.items():
+                if data["status"] == "ok":
+                    for text in data["texts"]:
+                        all_texts.append({"url": url, "text": text})
+
+            if not all_texts:
+                st.warning("No text content extracted from the URLs.")
+                if "crawled_results" in st.session_state:
+                    del st.session_state["crawled_results"]
+            else:
+                # 2. Predict
+                with st.spinner(f"Running predictions on {len(all_texts)} text chunks..."):
+                    model, aux = all_models["a"][crawl_model]
+                    texts_list = [t["text"] for t in all_texts]
+                    probas     = predict_proba(texts_list, crawl_model, model, aux, "a")
+
+                    pred_rows = []
+                    for i, t in enumerate(all_texts):
+                        label, conf = get_label_conf(probas[i], "a")
+                        pred_rows.append({
+                            "Source URL":  t["url"],
+                            "Text":        t["text"][:150],
+                            "Prediction":  label,
+                            "Confidence":  round(conf, 4),
+                        })
+
+                pred_df = pd.DataFrame(pred_rows)
+                
+                # Save crawled data locally
+                csv_path = save_crawled_data(results)
+
+                # Persist in session state
+                st.session_state["crawled_results"] = {
+                    "results": results,
+                    "pred_df": pred_df,
+                    "csv_path": csv_path,
+                }
+
+    # Render results if they exist in session state
+    if "crawled_results" in st.session_state:
+        cdata = st.session_state["crawled_results"]
+        results = cdata["results"]
+        pred_df = cdata["pred_df"]
+        csv_path = cdata["csv_path"]
+
+        # Show scraping status
+        ok_count  = sum(1 for v in results.values() if v["status"] == "ok")
+        err_count = sum(1 for v in results.values() if v["status"] == "error")
+        st.info(f"Scraped {ok_count} URL(s) successfully, {err_count} failed.")
+
+        for url, data in results.items():
+            if data["status"] == "error":
+                st.warning(f"Failed: {url} — {data['error']}")
+
+        # Summary stats
+        total     = len(pred_df)
+        off_count = (pred_df["Prediction"] == "OFF").sum()
+        not_count = (pred_df["Prediction"] == "NOT").sum()
+        off_rate  = off_count / total * 100 if total > 0 else 0
+
+        st.markdown("### Summary")
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Texts", total)
+        c2.metric("Offensive", int(off_count))
+        c3.metric("Not Offensive", int(not_count))
+        c4.metric("Offensive Rate", f"{off_rate:.1f}%")
+
+        # Results table
+        st.markdown("### Detailed Results")
+        st.dataframe(pred_df)
+
+        if csv_path:
+            st.success(f"Raw crawled data saved to: {csv_path}")
+
+        # Download results
+        csv_download = pred_df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="Download Results as CSV",
+            data=csv_download,
+            file_name="crawl_predictions.csv",
+            mime="text/csv",
+        )

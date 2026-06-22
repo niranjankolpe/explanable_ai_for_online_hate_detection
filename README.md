@@ -12,6 +12,8 @@ An end-to-end NLP framework for detecting offensive language and explaining mode
 | Task | Cascading subtask classification: Offensive detection → Type → Target |
 | Models | Baseline (TF-IDF + LR), BiLSTM, DistilBERT |
 | Explainability | LIME + SHAP word attribution, faithfulness analysis |
+| RAG Explainer | LangChain + ChromaDB + Google Gemini for natural language explanations |
+| Data Collection | BeautifulSoup web crawler with bulk URL support |
 | Responsible AI | Bias detection across race, religion, gender, sexual orientation |
 | MLOps | DVC, MLflow, Docker, GitHub Actions CI |
 
@@ -97,6 +99,50 @@ Tests all 3 models on 25 neutral sentences containing identity terms across 4 ca
 
 ---
 
+## RAG Explainer
+
+The RAG (Retrieval-Augmented Generation) Explainer uses **LangChain + ChromaDB + Google Gemini** to generate natural language explanations of model predictions.
+
+**How it works:**
+1. User submits text → model predicts OFF or NOT
+2. LIME and SHAP identify the most important words
+3. ChromaDB retrieves the 5 most similar tweets from the OLID training data (using sentence-transformers embeddings)
+4. All context is sent to Google Gemini via LangChain, which returns a plain-English explanation
+
+| Component | Details |
+|---|---|
+| Vector Store | ChromaDB (persistent, 13,240 embedded tweets) |
+| Embeddings | `all-MiniLM-L6-v2` via sentence-transformers (local, free) |
+| LLM | Google Gemini (`gemini-2.0-flash`) via LangChain |
+| Fallback | Structured text summary if no API key is set |
+
+### Setup
+
+```bash
+# 1. Build the vector store (one-time, ~2-3 min on CPU)
+python src/build_vector_store.py
+
+# 2. Set your Google API key (get one free at https://aistudio.google.com/apikey)
+set GOOGLE_API_KEY=your_key_here    # Windows
+```
+
+Alternatively, paste your API key directly in the app's RAG Explainer tab.
+
+---
+
+## Web Data Collection
+
+The Data Collection tab scrapes text from web pages using **BeautifulSoup + requests** and runs hate speech detection on the collected content.
+
+- Supports **bulk URL** input (one URL per line)
+- Extracts visible text (paragraphs, headings, list items) while stripping scripts, styles, and navigation
+- Runs batch predictions through the selected model
+- Displays summary statistics and detailed results
+- Saves raw crawled data to `data/crawled/` as timestamped CSV
+- Download button for prediction results as CSV
+
+---
+
 ## Monitoring & Drift Detection
 
 All predictions are logged to `logs/predictions.log`. Drift is flagged when the offensive rate in the last 20 predictions exceeds 60%.
@@ -153,6 +199,12 @@ dvc remote add -d storage C:/dvc-storage --local
 # 3. Pull trained models or reproduce from scratch
 dvc pull       # if DVC remote was configured on this machine before
 dvc repro      # to retrain everything from scratch
+
+# 4. Build the RAG vector store (one-time)
+python src/build_vector_store.py
+
+# 5. (Optional) Set Google API key for RAG explanations
+set GOOGLE_API_KEY=your_key_here
 ```
 
 ---
@@ -163,13 +215,15 @@ dvc repro      # to retrain everything from scratch
 streamlit run src/app.py
 ```
 
-Open the local URL in your browser. The app has 4 tabs:
+Open the local URL in your browser. The app has 6 tabs:
 
 | Tab | Description |
 |---|---|
 | **Prediction** | Cascading classification through Subtask A → B → C |
 | **Explanation** | LIME + SHAP word importance charts and side-by-side comparison |
+| **RAG Explainer** | LangChain + ChromaDB + Gemini natural language explanations |
 | **Bias Analysis** | Demographic bias report across identity categories |
+| **Data Collection** | Scrape text from URLs and run batch hate speech detection |
 | **Monitoring** | Prediction log, drift detection, per-model breakdown |
 
 **Sample inputs**
@@ -201,37 +255,42 @@ docker run -p 8501:8501 hate-detection-app
 python tests/test_core.py
 ```
 
-Covers: `preprocess_common`, `pad_sequence`, `Vocabulary`, `get_label_conf`, `compute_drift`, `get_model_breakdown`, `log_prediction`, `load_logs`, `compute_agreement`.
+Covers: `preprocess_common`, `pad_sequence`, `Vocabulary`, `get_label_conf`, `compute_drift`, `get_model_breakdown`, `log_prediction`, `load_logs`, `compute_agreement`, `scrape_text`, `scrape_multiple`.
 
 ---
 
 ## Project Structure
 
 ```
-├── data/                  # OLID dataset (DVC-tracked)
-├── models/                # Trained models (DVC-tracked)
+├── data/                       # OLID dataset (DVC-tracked)
+│   └── crawled/                # Web-scraped data (CSV files)
+├── models/                     # Trained models (DVC-tracked)
 │   ├── baseline_[a,b,c]/
 │   ├── lstm_[a,b,c]/
-│   └── bert_[a,b,c]/
-├── reports/               # metrics.json, bias_report.json, faithfulness_*.json
+│   ├── bert_[a,b,c]/
+│   └── chroma_store/           # ChromaDB vector store for RAG
+├── reports/                    # metrics.json, bias_report.json, faithfulness_*.json
 ├── src/
-│   ├── app.py             # Streamlit UI
-│   ├── train_baseline.py  # TF-IDF + LR training
-│   ├── train_lstm.py      # BiLSTM training
-│   ├── train_bert.py      # DistilBERT fine-tuning
-│   ├── predict.py         # Unified predict_proba interface
-│   ├── explain.py         # LIME + SHAP explanations
-│   ├── faithfulness.py    # LIME vs SHAP agreement analysis
-│   ├── evaluate.py        # Test set evaluation + MLflow logging
-│   ├── bias_analysis.py   # Demographic bias detection
-│   ├── monitor.py         # Prediction logging + drift detection
-│   ├── preprocess.py      # Text cleaning
-│   ├── dataset.py         # Vocabulary + dataset utilities
-│   └── model.py           # BiLSTM architecture
+│   ├── app.py                  # Streamlit UI (6 tabs)
+│   ├── train_baseline.py       # TF-IDF + LR training
+│   ├── train_lstm.py           # BiLSTM training
+│   ├── train_bert.py           # DistilBERT fine-tuning
+│   ├── predict.py              # Unified predict_proba interface
+│   ├── explain.py              # LIME + SHAP explanations
+│   ├── faithfulness.py         # LIME vs SHAP agreement analysis
+│   ├── evaluate.py             # Test set evaluation + MLflow logging
+│   ├── bias_analysis.py        # Demographic bias detection
+│   ├── monitor.py              # Prediction logging + drift detection
+│   ├── rag_engine.py           # LangChain + ChromaDB RAG pipeline
+│   ├── build_vector_store.py   # ChromaDB vector store builder
+│   ├── crawler.py              # BeautifulSoup web scraper
+│   ├── preprocess.py           # Text cleaning
+│   ├── dataset.py              # Vocabulary + dataset utilities
+│   └── model.py                # BiLSTM architecture
 ├── tests/
 │   └── test_core.py
-├── dvc.yaml               # Pipeline definition
-├── params.yaml            # Centralised hyperparameters
+├── dvc.yaml                    # Pipeline definition
+├── params.yaml                 # Centralised hyperparameters
 ├── Dockerfile
 └── .github/workflows/ci.yml
 ```
