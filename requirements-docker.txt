@@ -6,7 +6,7 @@ pandas
 PyYAML
 scikit-learn
 torch
-transformers==4.40.0
+transformers==4.41.0
 torchvision
 streamlit
 langchain

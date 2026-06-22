@@ -1,7 +1,7 @@
 # Core ML
 torch==2.2.2
 scikit-learn==1.4.2
-transformers==4.40.0
+transformers==4.41.0
 numpy==1.26.4
 pandas==2.2.2
 
