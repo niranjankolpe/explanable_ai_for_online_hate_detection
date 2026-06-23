@@ -7,6 +7,8 @@ Run: streamlit run src/app.py
 
 import os
 import json
+import asyncio
+import websockets
 
 import matplotlib
 matplotlib.use("Agg")
@@ -46,8 +48,8 @@ all_models = load_all_models()
 
 st.title("Explainable AI for Offensive Language Detection")
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-    ["Prediction", "Explanation", "RAG Explainer", "Bias Analysis", "Data Collection", "Monitoring"]
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
+    ["Prediction", "Explanation", "RAG Explainer", "Bias Analysis", "Data Collection", "Monitoring", "Live Stream Moderation"]
 )
 
 
@@ -483,3 +485,79 @@ with tab5:
             file_name="crawl_predictions.csv",
             mime="text/csv",
         )
+
+
+# ── Tab 7: Live Stream Moderation ─────────────────────────────────────────────
+with tab7:
+    st.subheader("Live Social Media Moderation Stream")
+    st.markdown(
+        "Connects directly to the **Bluesky Jetstream public firehose** via WebSockets. "
+        "Fetches and moderates incoming public posts in real-time."
+    )
+
+    stream_model = st.selectbox("Select Model for Live Analysis", ["baseline", "lstm", "bert"], key="stream_model")
+    max_posts = st.slider("Number of posts to capture", min_value=5, max_value=50, value=15, step=5, key="stream_max_posts")
+
+    async def run_bluesky_stream(model_name, limit):
+        model, aux = all_models["a"][model_name]
+        
+        status_box = st.empty()
+        progress_bar = st.progress(0)
+        feed_container = st.empty()
+        
+        results = []
+        url = "wss://jetstream1.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.post"
+        
+        status_box.info("Connecting to Bluesky firehose...")
+        
+        try:
+            async with websockets.connect(url) as websocket:
+                status_box.success("Connected! Listening for live posts...")
+                
+                count = 0
+                while count < limit:
+                    message = await websocket.recv()
+                    data = json.loads(message)
+                    
+                    post_text = data.get("commit", {}).get("record", {}).get("text", "")
+                    langs = data.get("commit", {}).get("record", {}).get("langs", [])
+                    # Filter out short/empty/non-english posts
+                    if post_text and len(post_text.strip()) > 15 and "en" in langs:
+                        # Clean and predict
+                        proba = predict_proba([post_text], model_name, model, aux, "a")
+                        label, conf = get_label_conf(proba[0], "a")
+                        
+                        results.append({
+                            "time": pd.Timestamp.now().strftime("%H:%M:%S"),
+                            "text": post_text.strip(),
+                            "label": label,
+                            "conf": conf
+                        })
+                        
+                        count += 1
+                        progress_bar.progress(count / limit)
+                        
+                        # Render scrolling feed in reverse chronological order (latest first)
+                        with feed_container.container():
+                            st.markdown("### Live Moderated Feed")
+                            for r in reversed(results):
+                                color = "red" if r["label"] == "OFF" else "green"
+                                st.markdown(
+                                    f"**[{r['time']}]** &nbsp; "
+                                    f":{color}[**{r['label']}** ({r['conf']:.2f})] &mdash; "
+                                    f"\"{r['text']}\""
+                                )
+                        
+                        # Small pause to allow Streamlit UI thread to render
+                        await asyncio.sleep(0.05)
+                        
+                status_box.success(f"Stream finished. Moderated {limit} live posts successfully!")
+                
+        except Exception as e:
+            status_box.error(f"WebSocket Connection Error: {e}")
+
+    if st.button("Start Live Stream"):
+        if all_models.get("a") is None or all_models["a"].get(stream_model) is None:
+            st.error(f"Subtask A {stream_model} model not loaded.")
+        else:
+            asyncio.run(run_bluesky_stream(stream_model, max_posts))
