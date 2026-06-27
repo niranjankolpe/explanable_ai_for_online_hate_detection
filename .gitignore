@@ -18,8 +18,8 @@ __pycache__/
 .env
 .venv/
 venv/
+docs/
 
 # OS
 .DS_Store
 Thumbs.db
-/data

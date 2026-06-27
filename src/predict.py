@@ -14,7 +14,6 @@ import joblib
 import torch
 import numpy as np
 import yaml
-from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 
 from model import BiLSTMClassifier
 from dataset import pad_sequence
@@ -60,9 +59,37 @@ def load_model(model_type: str, subtask: str = "a"):
         return model, vocab
 
     if model_type == "bert":
+        from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
+        
         model_dir = f"models/bert_{subtask}"
         tokenizer = DistilBertTokenizerFast.from_pretrained(model_dir)
         model     = DistilBertForSequenceClassification.from_pretrained(model_dir)
+        model.eval()
+        return model, tokenizer
+
+    if model_type == "llama":
+        import os
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from peft import PeftModel
+        
+        model_id = "meta-llama/Llama-3.2-3B-Instruct"
+        adapter_path = f"models/llama3.2_3b_lora_hate_speech"
+        if not os.path.exists(adapter_path):
+            raise FileNotFoundError(f"Adapter not found at {adapter_path}")
+            
+        tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=True)
+        tokenizer.pad_token = tokenizer.eos_token
+        
+        # Load base model on CPU using bfloat16 to save memory
+        base_model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            device_map="cpu",
+            torch_dtype=torch.bfloat16,
+            token=os.environ.get("HF_TOKEN")
+        )
+        
+        # Wrap with LoRA adapter
+        model = PeftModel.from_pretrained(base_model, adapter_path)
         model.eval()
         return model, tokenizer
 
@@ -109,6 +136,34 @@ def predict_proba(texts: list, model_type: str, model, aux, subtask: str = None)
         )
         with torch.no_grad():
             return torch.softmax(model(**enc).logits, dim=1).numpy()
+
+    if model_type == "llama":
+        tokenizer = aux
+        results = []
+        for text in texts:
+            # We must use the exact same prompt format as training
+            prompt = (
+                f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>\\n"
+                f"Analyze the following tweet and classify if it contains hate speech or offensive language.\\n"
+                f"Tweet: \\\"{text}\\\"\\n"
+                f"Output exactly 'OFFENSIVE' or 'NOT OFFENSIVE'.<|eot_id|>\\n"
+                f"<|start_header_id|>assistant<|end_header_id|>\\n"
+            )
+            inputs = tokenizer(prompt, return_tensors="pt")
+            inputs = {k: v.to(model.device) for k, v in inputs.items()}
+            
+            with torch.no_grad():
+                outputs = model.generate(**inputs, max_new_tokens=5, pad_token_id=tokenizer.eos_token_id)
+                
+            generated_tokens = outputs[0][inputs["input_ids"].shape[1]:]
+            decoded = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+            
+            if "NOT OFFENSIVE" in decoded.upper() or "NOT" in decoded.upper():
+                results.append([1.0, 0.0]) # [NOT, OFF]
+            else:
+                results.append([0.0, 1.0]) # [NOT, OFF]
+        
+        return np.array(results)
 
     raise ValueError(f"Unknown model_type: {model_type}")
 

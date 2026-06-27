@@ -15,6 +15,8 @@ An end-to-end NLP framework for detecting offensive language and explaining mode
 | RAG Explainer | LangChain + ChromaDB + Google Gemini for natural language explanations |
 | Data Collection | BeautifulSoup web crawler with bulk URL support |
 | Responsible AI | Bias detection across race, religion, gender, sexual orientation |
+| Live Streaming | Real-time Bluesky firehose moderation via WebSockets |
+| Agentic AI | CrewAI multi-agent website audit (Scraper + Analyst agents) |
 | MLOps | DVC, MLflow, Docker, GitHub Actions CI |
 
 ---
@@ -138,7 +140,7 @@ The Data Collection tab scrapes text from web pages using **BeautifulSoup + requ
 - Extracts visible text (paragraphs, headings, list items) while stripping scripts, styles, and navigation
 - Runs batch predictions through the selected model
 - Displays summary statistics and detailed results
-- Saves raw crawled data to `data/crawled/` as timestamped CSV
+- Saves raw crawled data to `crawled_data/` as timestamped CSV
 - Download button for prediction results as CSV
 
 ---
@@ -146,6 +148,37 @@ The Data Collection tab scrapes text from web pages using **BeautifulSoup + requ
 ## Monitoring & Drift Detection
 
 All predictions are logged to `logs/predictions.log`. Drift is flagged when the offensive rate in the last 20 predictions exceeds 60%.
+
+---
+
+## Live Stream Moderation
+
+Connects to the **Bluesky Jetstream public firehose** via WebSockets for real-time moderation of live social media posts.
+
+- Streams English-language posts from Bluesky's decentralized network
+- Runs hate speech classification on each post in real-time
+- Displays a scrolling moderated feed with color-coded labels (🟢 NOT / 🔴 OFF)
+- Configurable capture count (5–50 posts per session)
+- No API key needed — uses the public Jetstream endpoint
+
+---
+
+## Agentic Analysis (CrewAI)
+
+A **multi-agent AI workflow** using CrewAI that performs automated website content auditing.
+
+**How it works:**
+1. **Scraper Agent** — Recursively crawls a target website (respecting `robots.txt`), extracting all visible text content
+2. **Analyst Agent** — Classifies every text chunk using the local hate speech model and generates a compliance audit report
+
+| Component | Details |
+|---|---|
+| Framework | CrewAI multi-agent orchestration |
+| LLM | Google Gemini (configurable: `gemini-3.5-flash`, `gemini-2.0-flash`) |
+| Crawler | Recursive with `robots.txt` compliance, same-domain restriction |
+| Classifier | Local baseline model (no API calls for classification) |
+
+> **Note:** Requires a Google Gemini API key. The free tier allows 20 requests/day per model. Each audit run uses ~10-20 API calls.
 
 ---
 
@@ -215,7 +248,7 @@ set GOOGLE_API_KEY=your_key_here
 streamlit run src/app.py
 ```
 
-Open the local URL in your browser. The app has 6 tabs:
+Open the local URL in your browser. The app has 8 tabs:
 
 | Tab | Description |
 |---|---|
@@ -225,6 +258,8 @@ Open the local URL in your browser. The app has 6 tabs:
 | **Bias Analysis** | Demographic bias report across identity categories |
 | **Data Collection** | Scrape text from URLs and run batch hate speech detection |
 | **Monitoring** | Prediction log, drift detection, per-model breakdown |
+| **Live Stream Moderation** | Real-time Bluesky firehose WebSocket moderation |
+| **Agentic Analysis** | CrewAI multi-agent recursive website audit |
 
 **Sample inputs**
 ```
@@ -271,7 +306,7 @@ Covers: `preprocess_common`, `pad_sequence`, `Vocabulary`, `get_label_conf`, `co
 │   └── chroma_store/           # ChromaDB vector store for RAG
 ├── reports/                    # metrics.json, bias_report.json, faithfulness_*.json
 ├── src/
-│   ├── app.py                  # Streamlit UI (6 tabs)
+│   ├── app.py                  # Streamlit UI (8 tabs)
 │   ├── train_baseline.py       # TF-IDF + LR training
 │   ├── train_lstm.py           # BiLSTM training
 │   ├── train_bert.py           # DistilBERT fine-tuning
@@ -283,7 +318,8 @@ Covers: `preprocess_common`, `pad_sequence`, `Vocabulary`, `get_label_conf`, `co
 │   ├── monitor.py              # Prediction logging + drift detection
 │   ├── rag_engine.py           # LangChain + ChromaDB RAG pipeline
 │   ├── build_vector_store.py   # ChromaDB vector store builder
-│   ├── crawler.py              # BeautifulSoup web scraper
+│   ├── crawler.py              # BeautifulSoup web scraper + recursive crawler
+│   ├── agents_workflow.py      # CrewAI multi-agent audit workflow
 │   ├── preprocess.py           # Text cleaning
 │   ├── dataset.py              # Vocabulary + dataset utilities
 │   └── model.py                # BiLSTM architecture

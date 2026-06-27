@@ -16,6 +16,10 @@ import chromadb
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 from langchain_google_genai import ChatGoogleGenerativeAI
+try:
+    from langchain_ollama import ChatOllama
+except ImportError:
+    ChatOllama = None
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
@@ -139,15 +143,16 @@ def generate_explanation(
     shap_scores: dict,
     similar_examples: list[dict],
     api_key: str = None,
+    llm_provider: str = "Gemini",
 ) -> str:
     """
-    Generate a natural language explanation using Google Gemini via LangChain.
+    Generate a natural language explanation using Google Gemini or local Ollama.
 
-    Falls back to a structured text summary if no API key is available.
+    Falls back to a structured text summary if no API key is available for Gemini.
     """
     # Try to get API key from argument, env var, or return fallback
     key = api_key or os.environ.get("GOOGLE_API_KEY", "")
-    if not key:
+    if llm_provider != "Ollama (Llama 3.1)" and not key:
         return _fallback_explanation(
             text, model_name, prediction, confidence,
             lime_scores, shap_scores, similar_examples,
@@ -161,11 +166,19 @@ def generate_explanation(
         template=_PROMPT_TEMPLATE,
     )
 
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-3.5-flash",
-        google_api_key=key,
-        temperature=0.3,
-    )
+    if llm_provider == "Ollama (Llama 3.1)":
+        if ChatOllama is None:
+            return "Error: langchain-ollama is not installed. Please install it to use Ollama."
+        llm = ChatOllama(
+            model="llama3.1:8b",
+            temperature=0.3,
+        )
+    else:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            google_api_key=key,
+            temperature=0.3,
+        )
 
     chain = prompt | llm
 

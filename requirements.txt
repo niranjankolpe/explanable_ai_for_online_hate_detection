@@ -1,36 +1,47 @@
 # Core ML
-torch==2.2.2
-scikit-learn==1.4.2
-transformers==4.41.0
-numpy==1.26.4
-pandas==2.2.2
+torch
+scikit-learn
+transformers>=4.41.0
+numpy
+pandas
 
 # Explainability
-shap==0.45.0
-lime==0.2.0.1
+shap
+lime
 
 # MLOps
-mlflow==2.12.2
-dvc==3.49.0
-dvc[s3]==3.49.0
+mlflow
+dvc
+dvc[s3]
 
 # App
-streamlit==1.33.0
-matplotlib==3.8.4
-PyYAML==6.0.1
+streamlit
+matplotlib
+PyYAML
 
 # Serialization
-joblib==1.4.0
+joblib
 
 # LangChain / RAG
-langchain==0.3.25
-langchain-google-genai==2.1.5
-chromadb==1.0.7
-sentence-transformers==4.1.0
+langchain
+langchain-google-genai
+chromadb
+sentence-transformers
 
 # Web Crawling
-beautifulsoup4==4.13.4
-requests==2.32.3
+beautifulsoup4
+requests
 
 # Live Streaming
-websockets==12.0
+websockets
+
+# Agentic Workflow
+crewai
+crewai-tools
+
+# Local LLMs & Fine-Tuning
+langchain-ollama
+peft
+accelerate
+bitsandbytes
+trl

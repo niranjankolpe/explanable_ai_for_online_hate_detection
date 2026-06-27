@@ -9,6 +9,7 @@ torch
 transformers==4.41.0
 torchvision
 streamlit
+matplotlib
 langchain
 langchain-google-genai
 chromadb
@@ -16,3 +17,5 @@ sentence-transformers
 beautifulsoup4
 requests
 websockets
+crewai==1.14.7
+crewai-tools==1.14.7

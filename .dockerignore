@@ -1,10 +1,10 @@
 venv/
+docs/
 .git
 .gitignore
 .dvc/cache
 .dvc/tmp
 .dvc/config.local
 notebooks/
-docs/
 __pycache__/
 *.pyc

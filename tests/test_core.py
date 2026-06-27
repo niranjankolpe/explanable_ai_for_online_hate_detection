@@ -230,4 +230,44 @@ with patch("crawler.scrape_text") as mock_scrape:
     assert "https://a.com" in results
 
 
+# ── crawler.RecursiveCrawler ──────────────────────────────────────────────────
+from crawler import RecursiveCrawler
+
+# Test Robots.txt Parsing & Allowed logic
+with patch("crawler.RobotFileParser") as mock_parser_cls:
+    mock_parser = MagicMock()
+    mock_parser.can_fetch.return_value = True
+    mock_parser_cls.return_value = mock_parser
+    
+    crawler = RecursiveCrawler(max_depth=1, max_pages=2)
+    assert crawler.is_allowed("https://allowed.com/path") == True
+
+# Test Link Extraction
+crawler = RecursiveCrawler(max_depth=1, max_pages=2)
+links = crawler.extract_links(
+    "https://example.com/start",
+    '<html><body><a href="/about">About</a><a href="https://external.com">External</a></body></html>'
+)
+assert "https://example.com/about" in links
+assert "https://external.com" not in links
+
+# Test crawl loop mock
+with patch("crawler.requests.get") as mock_get, \
+     patch("crawler.RecursiveCrawler.is_allowed") as mock_allowed:
+
+    mock_allowed.return_value = True
+
+    mock_resp = MagicMock()
+    mock_resp.text = '<html><body><p>Crawled content chunk.</p><a href="https://example.com/child">Child</a></body></html>'
+    mock_resp.headers = {"Content-Type": "text/html"}
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.return_value = mock_resp
+
+    crawler = RecursiveCrawler(max_depth=1, max_pages=2)
+    results = crawler.crawl("https://example.com")
+    assert "https://example.com" in results
+    assert results["https://example.com"]["status"] == "ok"
+    assert "Crawled content chunk." in results["https://example.com"]["texts"]
+
+
 print("All tests passed.")

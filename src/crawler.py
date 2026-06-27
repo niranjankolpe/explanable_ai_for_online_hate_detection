@@ -16,6 +16,8 @@ Usage:
 import os
 import re
 from datetime import datetime
+from urllib.parse import urlparse, urljoin
+from urllib.robotparser import RobotFileParser
 
 import pandas as pd
 import requests
@@ -119,3 +121,112 @@ def save_crawled_data(results: dict, output_dir: str = "crawled_data") -> str:
     path = os.path.join(output_dir, f"{timestamp}_crawled.csv")
     df.to_csv(path, index=False)
     return path
+
+
+class RecursiveCrawler:
+    """
+    Recursive web crawler that follows internal links up to a depth limit,
+    obeys robots.txt directives, and restricts crawling to the original start domain.
+    """
+    def __init__(self, max_depth: int = 2, max_pages: int = 10, user_agent: str = "*"):
+        self.max_depth = max_depth
+        self.max_pages = max_pages
+        self.user_agent = user_agent
+        self.visited = set()
+        self.robots_parsers = {}  # Cache parsed robots.txt by domain
+
+    def _get_robots_parser(self, url: str) -> RobotFileParser:
+        parsed = urlparse(url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
+        if base_url not in self.robots_parsers:
+            rp = RobotFileParser()
+            rp.set_url(urljoin(base_url, "/robots.txt"))
+            try:
+                # Add headers matching our standard requests
+                # Note: RobotFileParser reads natively via urllib, so we just set read timeout
+                rp.read()
+            except Exception:
+                rp = None
+            self.robots_parsers[base_url] = rp
+        return self.robots_parsers[base_url]
+
+    def is_allowed(self, url: str) -> bool:
+        rp = self._get_robots_parser(url)
+        if rp is None:
+            return True
+        return rp.can_fetch(self.user_agent, url)
+
+    def extract_links(self, url: str, html: str) -> list[str]:
+        soup = BeautifulSoup(html, "html.parser")
+        links = []
+        parsed_url = urlparse(url)
+        base_domain = parsed_url.netloc
+        
+        for a in soup.find_all("a", href=True):
+            href = a["href"].strip()
+            full_url = urljoin(url, href)
+            # Remove fragment/anchor tags
+            full_url = full_url.split("#")[0]
+            
+            parsed_full = urlparse(full_url)
+            # Only traverse HTTP/HTTPS links on the same start domain
+            if parsed_full.netloc == base_domain and parsed_full.scheme in {"http", "https"}:
+                links.append(full_url)
+        return list(set(links))
+
+    def crawl(self, start_url: str) -> dict:
+        results = {}
+        queue = [(start_url, 0)]  # (url, depth)
+        
+        while queue and len(self.visited) < self.max_pages:
+            url, depth = queue.pop(0)
+            
+            if url in self.visited:
+                continue
+                
+            # Enforce robots.txt rules
+            if not self.is_allowed(url):
+                results[url] = {"status": "error", "error": "Disallowed by robots.txt"}
+                continue
+                
+            self.visited.add(url)
+            
+            try:
+                # Single HTTP request per URL — reuse response for both
+                # text extraction and link discovery
+                resp = requests.get(url, headers=_HEADERS, timeout=_TIMEOUT)
+                resp.raise_for_status()
+
+                content_type = resp.headers.get("Content-Type", "")
+                if "text/html" not in content_type and "text/plain" not in content_type:
+                    results[url] = {"status": "error", "error": f"Non-text content type: {content_type}"}
+                    continue
+
+                soup = BeautifulSoup(resp.text, "html.parser")
+
+                # Remove non-visible elements (same logic as scrape_text)
+                for tag in soup.find_all(_STRIP_TAGS):
+                    tag.decompose()
+                for tag in soup.find_all(["nav", "header", "footer"]):
+                    tag.decompose()
+
+                chunks = []
+                for tag in soup.find_all(_CONTENT_TAGS):
+                    text = tag.get_text(separator=" ", strip=True)
+                    text = re.sub(r"\s+", " ", text).strip()
+                    if len(text.split()) >= 3:
+                        chunks.append(text)
+
+                results[url] = {"status": "ok", "texts": chunks}
+                
+                # Queue child links if below max depth (reuses same resp.text)
+                if depth < self.max_depth:
+                    child_links = self.extract_links(url, resp.text)
+                    for link in child_links:
+                        if link not in self.visited:
+                            queue.append((link, depth + 1))
+                            
+            except Exception as e:
+                results[url] = {"status": "error", "error": str(e)}
+                
+        return results
