@@ -166,8 +166,7 @@ with tab2:
                     xrange = max(df["Score"].max(), 0) - \
                         min(df["Score"].min(), 0)
                     pad = xrange * 0.35 if xrange > 0 else 0.1
-                    ax.set_xlim(min(df["Score"].min(), 0) -
-                                pad, max(df["Score"].max(), 0) + pad)
+                    ax.set_xlim(min(df["Score"].min(), 0) - pad, max(df["Score"].max(), 0) + pad)
                     for bar, val in zip(bars, df["Score"]):
                         ax.text(val + (pad * 0.1 if val >= 0 else -pad * 0.1),
                                 bar.get_y() + bar.get_height() / 2,
