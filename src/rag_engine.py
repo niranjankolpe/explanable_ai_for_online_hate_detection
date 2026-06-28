@@ -26,9 +26,9 @@ from langchain.chains import LLMChain
 load_dotenv()
 
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# ── Paths ───────────────────────────────────────────────────────────────
 
-CHROMA_DIR      = "models/chroma_store"
+CHROMA_DIR = "models/chroma_store"
 COLLECTION_NAME = "olid_tweets"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
@@ -45,7 +45,7 @@ def _get_embedder() -> SentenceTransformer:
     return _embedder
 
 
-# ── Vector store ──────────────────────────────────────────────────────────────
+# ── Vector store ────────────────────────────────────────────────────────
 
 def load_vector_store() -> chromadb.Collection:
     """Load the pre-built ChromaDB collection from disk."""
@@ -58,14 +58,17 @@ def load_vector_store() -> chromadb.Collection:
     return client.get_collection(name=COLLECTION_NAME)
 
 
-def retrieve_similar(text: str, collection: chromadb.Collection, k: int = 5) -> list[dict]:
+def retrieve_similar(
+        text: str,
+        collection: chromadb.Collection,
+        k: int = 5) -> list[dict]:
     """
     Retrieve the K most similar tweets from the vector store.
 
     Returns a list of dicts with keys: tweet, label_a, label_b, label_c, distance
     """
-    embedder   = _get_embedder()
-    query_emb  = embedder.encode([text]).tolist()
+    embedder = _get_embedder()
+    query_emb = embedder.encode([text]).tolist()
 
     results = collection.query(
         query_embeddings=query_emb,
@@ -76,16 +79,16 @@ def retrieve_similar(text: str, collection: chromadb.Collection, k: int = 5) -> 
     similar = []
     for i in range(len(results["documents"][0])):
         similar.append({
-            "tweet":    results["documents"][0][i],
-            "label_a":  results["metadatas"][0][i].get("label_a", ""),
-            "label_b":  results["metadatas"][0][i].get("label_b", ""),
-            "label_c":  results["metadatas"][0][i].get("label_c", ""),
+            "tweet": results["documents"][0][i],
+            "label_a": results["metadatas"][0][i].get("label_a", ""),
+            "label_b": results["metadatas"][0][i].get("label_b", ""),
+            "label_c": results["metadatas"][0][i].get("label_c", ""),
             "distance": results["distances"][0][i],
         })
     return similar
 
 
-# ── LLM explanation ───────────────────────────────────────────────────────────
+# ── LLM explanation ─────────────────────────────────────────────────────
 
 _PROMPT_TEMPLATE = """You are an AI explainability assistant for a hate speech detection system \
 built on the OLID dataset (Offensive Language Identification Dataset).
@@ -117,7 +120,9 @@ def _format_word_scores(scores: dict) -> str:
     if not scores:
         return "(none)"
     parts = []
-    for word, score in sorted(scores.items(), key=lambda x: abs(x[1]), reverse=True):
+    for word, score in sorted(
+            scores.items(), key=lambda x: abs(
+            x[1]), reverse=True):
         direction = "offensive" if score > 0 else "not offensive"
         parts.append(f"  \"{word}\" → {score:+.4f} ({direction})")
     return "\n".join(parts)
@@ -187,20 +192,22 @@ def generate_explanation(
     for attempt in range(retries):
         try:
             result = chain.invoke({
-                "text":             text,
-                "model_name":       model_name,
-                "prediction":       prediction,
-                "confidence":       confidence,
-                "lime_words":       _format_word_scores(lime_scores),
-                "shap_words":       _format_word_scores(shap_scores),
+                "text": text,
+                "model_name": model_name,
+                "prediction": prediction,
+                "confidence": confidence,
+                "lime_words": _format_word_scores(lime_scores),
+                "shap_words": _format_word_scores(shap_scores),
                 "similar_examples": _format_similar(similar_examples),
             })
             return result.content
         except Exception as e:
             err_msg = str(e)
-            is_rate_limit = "429" in err_msg or "quota" in err_msg.lower() or "resourceexhausted" in err_msg.lower()
+            is_rate_limit = "429" in err_msg or "quota" in err_msg.lower(
+            ) or "resourceexhausted" in err_msg.lower()
             if is_rate_limit and attempt < retries - 1:
-                print(f"[RAG Engine] Rate limit hit (429/ResourceExhausted). Retrying in {delay}s (Attempt {attempt+1}/{retries})...")
+                print(
+                    f"[RAG Engine] Rate limit hit (429/ResourceExhausted). Retrying in {delay}s (Attempt {attempt+1}/{retries})...")
                 time.sleep(delay)
                 delay *= 2.0
             else:

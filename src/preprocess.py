@@ -12,5 +12,5 @@ import re
 def preprocess_common(text: str) -> str:
     text = str(text).lower()
     text = re.sub(r"http\S+", "", text)
-    text = re.sub(r"@\w+",   "", text)
+    text = re.sub(r"@\w+", "", text)
     return text.strip()

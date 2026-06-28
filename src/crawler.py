@@ -25,7 +25,15 @@ from bs4 import BeautifulSoup
 
 
 # Tags whose content is not visible text — strip them entirely
-_STRIP_TAGS = {"script", "style", "noscript", "iframe", "svg", "canvas", "meta", "link"}
+_STRIP_TAGS = {
+    "script",
+    "style",
+    "noscript",
+    "iframe",
+    "svg",
+    "canvas",
+    "meta",
+    "link"}
 
 # Tags that typically hold readable content
 _CONTENT_TAGS = {"p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "td", "th",
@@ -128,7 +136,12 @@ class RecursiveCrawler:
     Recursive web crawler that follows internal links up to a depth limit,
     obeys robots.txt directives, and restricts crawling to the original start domain.
     """
-    def __init__(self, max_depth: int = 2, max_pages: int = 10, user_agent: str = "*"):
+
+    def __init__(
+            self,
+            max_depth: int = 2,
+            max_pages: int = 10,
+            user_agent: str = "*"):
         self.max_depth = max_depth
         self.max_pages = max_pages
         self.user_agent = user_agent
@@ -143,7 +156,8 @@ class RecursiveCrawler:
             rp.set_url(urljoin(base_url, "/robots.txt"))
             try:
                 # Add headers matching our standard requests
-                # Note: RobotFileParser reads natively via urllib, so we just set read timeout
+                # Note: RobotFileParser reads natively via urllib, so we just
+                # set read timeout
                 rp.read()
             except Exception:
                 rp = None
@@ -161,36 +175,39 @@ class RecursiveCrawler:
         links = []
         parsed_url = urlparse(url)
         base_domain = parsed_url.netloc
-        
+
         for a in soup.find_all("a", href=True):
             href = a["href"].strip()
             full_url = urljoin(url, href)
             # Remove fragment/anchor tags
             full_url = full_url.split("#")[0]
-            
+
             parsed_full = urlparse(full_url)
             # Only traverse HTTP/HTTPS links on the same start domain
-            if parsed_full.netloc == base_domain and parsed_full.scheme in {"http", "https"}:
+            if parsed_full.netloc == base_domain and parsed_full.scheme in {
+                    "http", "https"}:
                 links.append(full_url)
         return list(set(links))
 
     def crawl(self, start_url: str) -> dict:
         results = {}
         queue = [(start_url, 0)]  # (url, depth)
-        
+
         while queue and len(self.visited) < self.max_pages:
             url, depth = queue.pop(0)
-            
+
             if url in self.visited:
                 continue
-                
+
             # Enforce robots.txt rules
             if not self.is_allowed(url):
-                results[url] = {"status": "error", "error": "Disallowed by robots.txt"}
+                results[url] = {
+                    "status": "error",
+                    "error": "Disallowed by robots.txt"}
                 continue
-                
+
             self.visited.add(url)
-            
+
             try:
                 # Single HTTP request per URL — reuse response for both
                 # text extraction and link discovery
@@ -199,7 +216,9 @@ class RecursiveCrawler:
 
                 content_type = resp.headers.get("Content-Type", "")
                 if "text/html" not in content_type and "text/plain" not in content_type:
-                    results[url] = {"status": "error", "error": f"Non-text content type: {content_type}"}
+                    results[url] = {
+                        "status": "error",
+                        "error": f"Non-text content type: {content_type}"}
                     continue
 
                 soup = BeautifulSoup(resp.text, "html.parser")
@@ -218,15 +237,15 @@ class RecursiveCrawler:
                         chunks.append(text)
 
                 results[url] = {"status": "ok", "texts": chunks}
-                
+
                 # Queue child links if below max depth (reuses same resp.text)
                 if depth < self.max_depth:
                     child_links = self.extract_links(url, resp.text)
                     for link in child_links:
                         if link not in self.visited:
                             queue.append((link, depth + 1))
-                            
+
             except Exception as e:
                 results[url] = {"status": "error", "error": str(e)}
-                
+
         return results

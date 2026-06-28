@@ -28,9 +28,11 @@ class Vocabulary:
         counter = Counter()
         for sentence in sentences:
             counter.update(preprocess_common(sentence).split())
-        for idx, (word, _) in enumerate(counter.most_common(self.max_size - 2), start=2):
+        for idx, (word, _) in enumerate(
+            counter.most_common(
+                self.max_size - 2), start=2):
             self.word2idx[word] = idx
-            self.idx2word[idx]  = word
+            self.idx2word[idx] = word
 
     def numericalize(self, text: str) -> list:
         return [
@@ -41,17 +43,17 @@ class Vocabulary:
 
 class OLIDDataset(Dataset):
     def __init__(self, texts, labels, vocab: Vocabulary, max_len: int = 25):
-        self.texts   = texts
-        self.labels  = labels
-        self.vocab   = vocab
+        self.texts = texts
+        self.labels = labels
+        self.vocab = vocab
         self.max_len = max_len
 
     def __len__(self) -> int:
         return len(self.texts)
 
     def __getitem__(self, idx):
-        text    = preprocess_common(self.texts.iloc[idx])
-        seq     = self.vocab.numericalize(text)
-        padded  = pad_sequence(seq, self.max_len)
-        label   = int(self.labels.iloc[idx])
+        text = preprocess_common(self.texts.iloc[idx])
+        seq = self.vocab.numericalize(text)
+        padded = pad_sequence(seq, self.max_len)
+        label = int(self.labels.iloc[idx])
         return torch.tensor(padded), torch.tensor(label)

@@ -40,21 +40,22 @@ OFFENSIVE_LABEL = "OFF"   # subtask A positive class
 
 def run_bias_analysis() -> dict:
     print("Loading models...")
-    models = {m: load_model(m, subtask="a") for m in ["baseline", "lstm", "bert"]}
+    models = {m: load_model(m, subtask="a")
+              for m in ["baseline", "lstm", "bert"]}
 
-    results     = {}
+    results = {}
     bias_counts = {m: 0 for m in models}
-    total       = 0
+    total = 0
 
     for category, sentences in BIAS_SENTENCES.items():
         results[category] = []
         for sentence in sentences:
-            total   += 1
-            row      = {"sentence": sentence}
+            total += 1
+            row = {"sentence": sentence}
 
             for model_type, (model, aux) in models.items():
-                proba         = predict_proba([sentence], model_type, model, aux)
-                label, conf   = get_label_conf(proba[0], subtask="a")
+                proba = predict_proba([sentence], model_type, model, aux)
+                label, conf = get_label_conf(proba[0], subtask="a")
                 row[model_type] = {"label": label, "confidence": conf}
                 if label == OFFENSIVE_LABEL:
                     bias_counts[model_type] += 1
@@ -65,8 +66,8 @@ def run_bias_analysis() -> dict:
 
     report = {
         "summary": {
-            "total_sentences":   total,
-            "bias_counts":       bias_counts,
+            "total_sentences": total,
+            "bias_counts": bias_counts,
             "bias_rate_percent": bias_rates,
         },
         "details": results,
@@ -79,7 +80,8 @@ def run_bias_analysis() -> dict:
     print("\n===== Bias Analysis Summary =====")
     print(f"Total neutral sentences: {total}")
     for model_type, rate in bias_rates.items():
-        print(f"  {model_type:10} | Wrongly OFF: {bias_counts[model_type]}/{total} ({rate}%)")
+        print(
+            f"  {model_type:10} | Wrongly OFF: {bias_counts[model_type]}/{total} ({rate}%)")
     print("Full report → reports/bias_report.json")
 
     return report

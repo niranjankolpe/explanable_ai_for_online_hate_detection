@@ -18,11 +18,11 @@ from sentence_transformers import SentenceTransformer
 from preprocess import preprocess_common
 
 
-DATA_PATH       = "data/olid-training-v1.0.tsv"
-CHROMA_DIR      = "models/chroma_store"
+DATA_PATH = "data/olid-training-v1.0.tsv"
+CHROMA_DIR = "models/chroma_store"
 COLLECTION_NAME = "olid_tweets"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-BATCH_SIZE      = 256
+BATCH_SIZE = 256
 
 
 def build():
@@ -47,8 +47,8 @@ def build():
 
     all_embeddings = []
     for i in range(0, len(tweets), BATCH_SIZE):
-        batch = tweets[i : i + BATCH_SIZE]
-        embs  = embedder.encode(batch, show_progress_bar=False)
+        batch = tweets[i: i + BATCH_SIZE]
+        embs = embedder.encode(batch, show_progress_bar=False)
         all_embeddings.extend(embs.tolist())
         done = min(i + BATCH_SIZE, len(tweets))
         print(f"  {done}/{len(tweets)} embedded")
@@ -57,7 +57,7 @@ def build():
     print(f"Saving to ChromaDB at {CHROMA_DIR}...")
     os.makedirs(CHROMA_DIR, exist_ok=True)
 
-    client     = chromadb.PersistentClient(path=CHROMA_DIR)
+    client = chromadb.PersistentClient(path=CHROMA_DIR)
 
     # Delete collection if it already exists (rebuild)
     try:
@@ -75,7 +75,7 @@ def build():
         end = min(i + BATCH_SIZE, len(tweets))
         batch_df = df.iloc[i:end]
 
-        ids       = [f"tweet_{j}" for j in range(i, end)]
+        ids = [f"tweet_{j}" for j in range(i, end)]
         documents = batch_df["clean_tweet"].tolist()
         embeddings = all_embeddings[i:end]
 
@@ -96,7 +96,8 @@ def build():
         )
         print(f"  {end}/{len(tweets)} stored in ChromaDB")
 
-    print(f"\nDone. ChromaDB collection '{COLLECTION_NAME}' saved to '{CHROMA_DIR}'")
+    print(
+        f"\nDone. ChromaDB collection '{COLLECTION_NAME}' saved to '{CHROMA_DIR}'")
     print(f"  Total documents: {collection.count()}")
 
 

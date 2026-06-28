@@ -47,8 +47,11 @@ class LangChainLLM(BaseLLM):
             lc_msgs.append(HumanMessage(content=messages))
         else:
             for m in messages:
-                role = getattr(m, "role", None) or m.get("role") if hasattr(m, "get") else None
-                content = getattr(m, "content", None) or m.get("content") if hasattr(m, "get") else str(m)
+                role = getattr(
+                    m, "role", None) or m.get("role") if hasattr(
+                    m, "get") else None
+                content = getattr(m, "content", None) or m.get(
+                    "content") if hasattr(m, "get") else str(m)
                 if role == "system":
                     lc_msgs.append(SystemMessage(content=content))
                 elif role in ("assistant", "model"):
@@ -59,14 +62,18 @@ class LangChainLLM(BaseLLM):
         content = res.content
         if isinstance(content, list):
             # Sometimes Gemini returns a list of dictionaries for text parts
-            if len(content) > 0 and isinstance(content[0], dict) and 'text' in content[0]:
-                content = "\n".join([c.get('text', '') for c in content if isinstance(c, dict)])
+            if len(content) > 0 and isinstance(
+                    content[0], dict) and 'text' in content[0]:
+                content = "\n".join([c.get('text', '')
+                                    for c in content if isinstance(c, dict)])
             else:
                 content = str(content)
         return str(content)
 
+
 # Global variable or cache for loaded models to avoid reloading
 _MODEL_CACHE = {}
+
 
 def _get_cached_model(model_type: str, subtask: str = "a"):
     key = (model_type, subtask)
@@ -85,7 +92,7 @@ def crawl_website(url: str) -> str:
     try:
         crawler = RecursiveCrawler(max_depth=2, max_pages=10)
         results = crawler.crawl(url)
-        
+
         output_lines = []
         for page_url, data in results.items():
             output_lines.append(f"=== PAGE: {page_url} ===")
@@ -96,9 +103,10 @@ def crawl_website(url: str) -> str:
                 else:
                     output_lines.append("(No significant text extracted)")
             else:
-                output_lines.append(f"Error crawling page: {data.get('error', 'unknown error')}")
+                output_lines.append(
+                    f"Error crawling page: {data.get('error', 'unknown error')}")
             output_lines.append("\n")
-            
+
         return "\n".join(output_lines)
     except Exception as e:
         return f"Error during crawl execution: {str(e)}"
@@ -116,49 +124,54 @@ def classify_content(text_blocks_raw: str) -> str:
         lines = text_blocks_raw.split("\n")
         current_url = "unknown"
         page_texts = {}
-        
+
         for line in lines:
             if line.startswith("=== PAGE: ") and line.endswith(" ==="):
                 current_url = line[10:-4]
                 page_texts[current_url] = []
             elif current_url != "unknown" and line.strip():
                 page_texts[current_url].append(line.strip())
-                
+
         # Load the baseline classifier model (subtask a)
         model, aux = _get_cached_model("baseline", "a")
-        
+
         output_reports = []
-        
+
         total_offensive = 0
         total_checked = 0
-        
+
         for url, texts in page_texts.items():
             if not texts:
                 continue
             # Predict probabilities
             probas = predict_proba(texts, "baseline", model, aux, subtask="a")
-            
+
             page_off_count = 0
             page_results = []
-            
+
             for text, proba in zip(texts, probas):
                 label, conf = get_label_conf(proba, "a")
                 total_checked += 1
                 if label == "OFF":
                     page_off_count += 1
                     total_offensive += 1
-                    page_results.append(f"- [OFFENSIVE] (Conf: {conf:.1%}): \"{text}\"")
+                    page_results.append(
+                        f"- [OFFENSIVE] (Conf: {conf:.1%}): \"{text}\"")
                 else:
-                    page_results.append(f"- [NOT OFFENSIVE] (Conf: {conf:.1%}): \"{text}\"")
-            
+                    page_results.append(
+                        f"- [NOT OFFENSIVE] (Conf: {conf:.1%}): \"{text}\"")
+
             off_pct = (page_off_count / len(texts)) * 100 if texts else 0
             output_reports.append(f"Page: {url}")
-            output_reports.append(f"Offensive Content Rate: {off_pct:.1f}% ({page_off_count}/{len(texts)} chunks)")
-            output_reports.append("\n".join(page_results[:10]))  # limit output size
+            output_reports.append(
+                f"Offensive Content Rate: {off_pct:.1f}% ({page_off_count}/{len(texts)} chunks)")
+            # limit output size
+            output_reports.append("\n".join(page_results[:10]))
             if len(page_results) > 10:
-                output_reports.append(f"... and {len(page_results) - 10} more chunks")
+                output_reports.append(
+                    f"... and {len(page_results) - 10} more chunks")
             output_reports.append("-" * 40)
-            
+
         summary = (
             f"Audit Summary:\n"
             f"Total Checked: {total_checked}\n"
@@ -170,28 +183,33 @@ def classify_content(text_blocks_raw: str) -> str:
         return f"Error during classification: {str(e)}"
 
 
-def run_agentic_audit(start_url: str, google_api_key: str = None, model_name: str = "gemini-2.0-flash") -> str:
+def run_agentic_audit(
+        start_url: str,
+        google_api_key: str = None,
+        model_name: str = "gemini-2.0-flash") -> str:
     """
     Orchestrates the CrewAI agents to scrape and audit the website content.
     Returns the final markdown report from the Analyst Agent.
     """
     if model_name == "Ollama (Llama 3.1)":
         if ChatOllama is None:
-            raise ImportError("langchain-ollama is not installed. Please install it to use Ollama.")
+            raise ImportError(
+                "langchain-ollama is not installed. Please install it to use Ollama.")
         lc_llm = ChatOllama(model="llama3.1:8b", temperature=0.2)
     else:
         api_key = google_api_key or os.environ.get("GOOGLE_API_KEY", "")
         if not api_key:
-            raise ValueError("Google API Key is required for CrewAI workflow execution using Gemini.")
-            
+            raise ValueError(
+                "Google API Key is required for CrewAI workflow execution using Gemini.")
+
         lc_llm = ChatGoogleGenerativeAI(
             model=model_name,
             google_api_key=api_key,
             temperature=0.2,
         )
-    
+
     llm = LangChainLLM(lc_llm)
-    
+
     # 1. Scraper Agent
     scraper = Agent(
         role="Website Content Scraper",
@@ -201,7 +219,7 @@ def run_agentic_audit(start_url: str, google_api_key: str = None, model_name: st
         llm=llm,
         verbose=True,
     )
-    
+
     # 2. Analyst Agent
     analyst = Agent(
         role="Hate Speech Content Auditor",
@@ -211,14 +229,14 @@ def run_agentic_audit(start_url: str, google_api_key: str = None, model_name: st
         llm=llm,
         verbose=True,
     )
-    
+
     # Task 1: Scraping
     scrape_task = Task(
         description=f"Crawl and harvest text content recursively starting from: {start_url}. Deliver the raw crawler text content grouped by URL.",
         expected_output="A structured raw text log of crawled pages and their corresponding text blocks.",
         agent=scraper,
     )
-    
+
     # Task 2: Analyzing
     audit_task = Task(
         description=(
@@ -227,12 +245,11 @@ def run_agentic_audit(start_url: str, google_api_key: str = None, model_name: st
             "1. An executive summary with statistics (total pages crawled, total text blocks, offense rate, overall risk level).\n"
             "2. A breakdown per URL with their respective offense rates.\n"
             "3. Examples of flagged offensive sentences, highlighting high-risk segments.\n"
-            "4. Actionable recommendations for trust & safety moderation or filtering."
-        ),
+            "4. Actionable recommendations for trust & safety moderation or filtering."),
         expected_output="A comprehensive Markdown compliance audit report listing statistics, breakdowns, flagged examples, and mitigation advice.",
         agent=analyst,
     )
-    
+
     crew = Crew(
         agents=[scraper, analyst],
         tasks=[scrape_task, audit_task],
@@ -241,9 +258,9 @@ def run_agentic_audit(start_url: str, google_api_key: str = None, model_name: st
         max_iter=2,
         memory=False,
     )
-    
+
     result = crew.kickoff()
-    
+
     # Handle CrewAI output wrapper variations
     if hasattr(result, "raw"):
         return result.raw

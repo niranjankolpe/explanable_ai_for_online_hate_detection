@@ -10,12 +10,12 @@ import torch.nn as nn
 class BiLSTMClassifier(nn.Module):
     def __init__(
         self,
-        vocab_size:    int,
+        vocab_size: int,
         embedding_dim: int = 128,
-        hidden_dim:    int = 128,
-        num_layers:    int = 2,
-        dropout:       float = 0.5,
-        num_classes:   int = 2,
+        hidden_dim: int = 128,
+        num_layers: int = 2,
+        dropout: float = 0.5,
+        num_classes: int = 2,
     ):
         super().__init__()
 
@@ -40,9 +40,9 @@ class BiLSTMClassifier(nn.Module):
         )
 
     def forward(self, x):
-        embedded              = self.embedding(x)
-        _, (hidden, _)        = self.lstm(embedded)
-        hidden_cat            = self.dropout(
+        embedded = self.embedding(x)
+        _, (hidden, _) = self.lstm(embedded)
+        hidden_cat = self.dropout(
             torch.cat((hidden[-2], hidden[-1]), dim=1)
         )
         return self.fc(hidden_cat)
