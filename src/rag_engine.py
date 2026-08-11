@@ -20,9 +20,10 @@ try:
     from langchain_ollama import ChatOllama
 except ImportError:
     ChatOllama = None
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
 
+# from langchain.chains import LLMChain
+from langchain_classic.chains import LLMChain
 load_dotenv()
 
 
@@ -180,7 +181,7 @@ def generate_explanation(
         )
     else:
         llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
+            model="gemini-3.5-flash",
             google_api_key=key,
             temperature=0.3,
         )
@@ -200,7 +201,14 @@ def generate_explanation(
                 "shap_words": _format_word_scores(shap_scores),
                 "similar_examples": _format_similar(similar_examples),
             })
-            return result.content
+            # return result.content
+            content = result.content
+            if isinstance(content, list):
+                content = "".join(
+                    p.get("text", "") if isinstance(p, dict) else str(p)
+                    for p in content
+                )
+            return content
         except Exception as e:
             err_msg = str(e)
             is_rate_limit = "429" in err_msg or "quota" in err_msg.lower(
