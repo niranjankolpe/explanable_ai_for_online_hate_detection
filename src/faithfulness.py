@@ -53,7 +53,7 @@ def run_faithfulness(subtask: str = "a") -> dict:
 
     results = {}
 
-    for model_type in ["baseline", "lstm", "bert"]:
+    for model_type in ["baseline"]:  # DISABLED lstm/bert for demo
         print(f"  Running {model_type.upper()}...")
         model, aux = load_model(model_type, subtask)
 
@@ -113,7 +113,7 @@ def run_faithfulness(subtask: str = "a") -> dict:
     for m, v in results.items():
         print(
             f"{m:12} | {v['avg_agreement_pct']:>14.2f}% | {v['samples_evaluated']:>8}")
-    print(f"\nSaved → reports/faithfulness_{subtask}.json")
+    print(f"\nSaved -> reports/faithfulness_{subtask}.json")
 
     return report
 

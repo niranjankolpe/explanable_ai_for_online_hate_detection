@@ -14,35 +14,36 @@ stages:
       outs:
         - models/baseline_${item}
 
-  train_lstm@${item}:
-    foreach: [a, b, c]
-    do:
-      cmd: python src/train_lstm.py ${item}
-      deps:
-        - data/olid-training-v1.0.tsv
-        - src/train_lstm.py
-        - src/dataset.py
-        - src/model.py
-        - src/preprocess.py
-      params:
-        - lstm
-        - subtasks
-      outs:
-        - models/lstm_${item}
+  # DISABLED for demo — LogReg-only pipeline. Re-enable by uncommenting.
+  # train_lstm@${item}:
+  #   foreach: [a, b, c]
+  #   do:
+  #     cmd: python src/train_lstm.py ${item}
+  #     deps:
+  #       - data/olid-training-v1.0.tsv
+  #       - src/train_lstm.py
+  #       - src/dataset.py
+  #       - src/model.py
+  #       - src/preprocess.py
+  #     params:
+  #       - lstm
+  #       - subtasks
+  #     outs:
+  #       - models/lstm_${item}
 
-  train_bert@${item}:
-    foreach: [a, b, c]
-    do:
-      cmd: python src/train_bert.py ${item}
-      deps:
-        - data/olid-training-v1.0.tsv
-        - src/train_bert.py
-        - src/preprocess.py
-      params:
-        - bert
-        - subtasks
-      outs:
-        - models/bert_${item}
+  # train_bert@${item}:
+  #   foreach: [a, b, c]
+  #   do:
+  #     cmd: python src/train_bert.py ${item}
+  #     deps:
+  #       - data/olid-training-v1.0.tsv
+  #       - src/train_bert.py
+  #       - src/preprocess.py
+  #     params:
+  #       - bert
+  #       - subtasks
+  #     outs:
+  #       - models/bert_${item}
 
   evaluate:
     cmd: python src/evaluate.py

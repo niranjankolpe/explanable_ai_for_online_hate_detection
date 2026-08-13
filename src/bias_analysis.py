@@ -41,7 +41,7 @@ OFFENSIVE_LABEL = "OFF"   # subtask A positive class
 def run_bias_analysis() -> dict:
     print("Loading models...")
     models = {m: load_model(m, subtask="a")
-              for m in ["baseline", "lstm", "bert"]}
+              for m in ["baseline"]}  # DISABLED lstm/bert for demo
 
     results = {}
     bias_counts = {m: 0 for m in models}
@@ -82,7 +82,7 @@ def run_bias_analysis() -> dict:
     for model_type, rate in bias_rates.items():
         print(
             f"  {model_type:10} | Wrongly OFF: {bias_counts[model_type]}/{total} ({rate}%)")
-    print("Full report → reports/bias_report.json")
+    print("Full report -> reports/bias_report.json")
 
     return report
 

@@ -49,7 +49,8 @@ def get_model_cached(model_type: str, subtask: str):
 
 # Dynamically check which models are available on disk without loading
 # them into memory
-available_models = ["baseline", "lstm", "bert"]
+# DISABLED for demo — LogReg-only. Re-enable: available_models = ["baseline", "lstm", "bert"]
+available_models = ["baseline"]
 if os.path.exists("models/llama3.2_3b_lora_hate_speech"):
     available_models.append("llama")
 

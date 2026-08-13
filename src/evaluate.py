@@ -67,7 +67,7 @@ def evaluate_subtask(subtask: str) -> dict:
 
     df = load_test_data(subtask)
     results = {}
-    for model_type in ["baseline", "lstm", "bert"]:
+    for model_type in ["baseline"]:  # DISABLED lstm/bert for demo
         r = evaluate_model(df, model_type, subtask)
         if r is not None:
             results[model_type] = r
