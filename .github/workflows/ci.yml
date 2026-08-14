@@ -31,16 +31,9 @@ jobs:
       - name: Run tests
         run: python tests/test_core.py
 
-  # Wired and ready, but gated to manual runs (workflow_dispatch) so it doesn't
-  # fire — and fail — on every push while the ECR repo / ECS cluster+service /
-  # ALB / IAM roles and GitHub secrets (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
-  # ECR_URI) aren't provisioned yet. Once that infra exists, either trigger this
-  # manually from the Actions tab, or drop the "if:" condition to run on every
-  # push to main.
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
