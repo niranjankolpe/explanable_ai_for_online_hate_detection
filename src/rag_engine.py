@@ -22,8 +22,6 @@ except ImportError:
     ChatOllama = None
 from langchain_core.prompts import PromptTemplate
 
-# from langchain.chains import LLMChain
-from langchain_classic.chains import LLMChain
 load_dotenv()
 
 

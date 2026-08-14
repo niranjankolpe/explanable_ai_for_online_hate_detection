@@ -276,7 +276,7 @@ with tab4:
         summary_df = pd.DataFrame([
             {"Model": m, "Biased Predictions": summary["bias_counts"][m],
              "Total": summary["total_sentences"], "Bias Rate (%)": summary["bias_rate_percent"][m]}
-            for m in ["baseline", "lstm", "bert"]
+            for m in ["baseline"]  # DISABLED lstm/bert for demo
         ])
         st.dataframe(summary_df)
 
@@ -286,8 +286,6 @@ with tab4:
                 st.dataframe(pd.DataFrame([{
                     "Sentence": e["sentence"],
                     "Baseline": e["baseline"]["label"],
-                    "BiLSTM": e["lstm"]["label"],
-                    "DistilBERT": e["bert"]["label"],
                 } for e in entries]))
 
 
