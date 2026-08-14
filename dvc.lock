@@ -767,3 +767,24 @@ stages:
       hash: md5
       md5: ca0b799d956cffb9af189fd85d763d97
       size: 246
+  build_vector_store:
+    cmd: python src/build_vector_store.py
+    deps:
+    - path: data/olid-training-v1.0.tsv
+      hash: md5
+      md5: 426d641b4084d616781c4617455a1245
+      size: 1975156
+    - path: src/build_vector_store.py
+      hash: md5
+      md5: a7c7e257cc5c0df17c3c125551f6547a
+      size: 3271
+    - path: src/preprocess.py
+      hash: md5
+      md5: f0bf8382251564047fba02dbd098ddcb
+      size: 392
+    outs:
+    - path: models/chroma_store
+      hash: md5
+      md5: 9d317756384bf22c39cd94f298c1d0cc.dir
+      size: 43526300
+      nfiles: 6

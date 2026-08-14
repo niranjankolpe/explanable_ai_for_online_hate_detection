@@ -14,6 +14,15 @@ stages:
       outs:
         - models/baseline_${item}
 
+  build_vector_store:
+    cmd: python src/build_vector_store.py
+    deps:
+      - data/olid-training-v1.0.tsv
+      - src/build_vector_store.py
+      - src/preprocess.py
+    outs:
+      - models/chroma_store
+
   # DISABLED for demo — LogReg-only pipeline. Re-enable by uncommenting.
   # train_lstm@${item}:
   #   foreach: [a, b, c]
