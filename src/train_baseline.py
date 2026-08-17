@@ -17,16 +17,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 
 import mlflow
-import mlflow.sklearn
 
 from preprocess import preprocess_common
 
 DATA_PATH = "data/olid-training-v1.0.tsv"
-RANDOM_STATE = 42
 
 with open("params.yaml") as f:
     params = yaml.safe_load(f)
 
+RANDOM_STATE = params["baseline"]["random_state"]
 
 def train(subtask: str) -> None:
     cfg = params["subtasks"][subtask]
@@ -46,7 +45,10 @@ def train(subtask: str) -> None:
         stratify=df[column],
     )
 
-    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
+    vectorizer = TfidfVectorizer(
+        max_features=params["baseline"]["max_features"],
+        ngram_range=tuple(params["baseline"]["ngram_range"]),
+    )
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_val_tfidf = vectorizer.transform(X_val)
 
@@ -65,13 +67,14 @@ def train(subtask: str) -> None:
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment(f"baseline_subtask_{subtask}")
     with mlflow.start_run():
-        mlflow.log_params({"subtask": subtask,
-                           "max_features": 10000,
-                           "ngram_range": "(1,2)",
-                           "preprocessing": "preprocess_common"})
+        mlflow.log_params({
+            "subtask": subtask,
+            "preprocessing": "preprocess_common",
+            **params["baseline"],
+        })
         mlflow.log_metric("val_acc", acc)
         mlflow.log_metric("val_f1_weighted", f1)
-        mlflow.sklearn.log_model(model, "baseline_model")
+        mlflow.log_artifacts(out_dir, artifact_path="baseline_model")
 
     print(f"  Val Acc: {acc:.4f} | Val F1: {f1:.4f}")
     print(classification_report(y_val, preds))

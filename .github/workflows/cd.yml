@@ -1,0 +1,47 @@
+# name: CD Pipeline
+#
+# on:
+#   workflow_run:
+#     workflows: ["CI Pipeline"]
+#     types: [completed]
+#     branches: [main]
+#
+# jobs:
+#   deploy:
+#     if: github.event.workflow_run.conclusion == 'success'
+#     runs-on: ubuntu-latest
+#
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.event.workflow_run.head_sha }}
+#
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ap-south-1
+#
+#       - name: Pull models from S3 via DVC
+#         run: |
+#           pip install dvc[s3]
+#           dvc pull
+#
+#       - name: Login to Amazon ECR
+#         uses: aws-actions/amazon-ecr-login@v1
+#
+#       - name: Build and push Docker image
+#         run: |
+#           docker build -t hate-detection-app .
+#           docker tag hate-detection-app:latest ${{ secrets.ECR_URI }}:latest
+#           docker push ${{ secrets.ECR_URI }}:latest
+#
+#       - name: Deploy to ECS
+#         run: |
+#           aws ecs update-service \
+#             --cluster hate-detection-cluster \
+#             --service hate-detection-service \
+#             --force-new-deployment \
+#             --region ap-south-1

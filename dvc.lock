@@ -10,18 +10,18 @@ stages:
       nfiles: 9
     - path: models/baseline_a
       hash: md5
-      md5: 3a8add79a9e76f727dec81efe33a96c8.dir
-      size: 460360
+      md5: 96d1a82977393aee2c07489cbe4728df.dir
+      size: 460303
       nfiles: 2
     - path: models/baseline_b
       hash: md5
-      md5: fb4868eeccfad939bb5f441342574d02.dir
-      size: 462564
+      md5: 3b908eedeb4e7245fda79fe1c97b59c4.dir
+      size: 462369
       nfiles: 2
     - path: models/baseline_c
       hash: md5
-      md5: 1d500e0be5ca131887735537d8fb5d9a.dir
-      size: 622885
+      md5: a31ac43438cbc0d1b670948c15c60a14.dir
+      size: 622552
       nfiles: 2
     - path: models/bert_a
       hash: md5
@@ -109,15 +109,15 @@ stages:
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: 3b4de91f363d3edc88527b3d8d7889c7
-      size: 450
+      md5: 6dffda4e98af2a7d26d4a855063b5960
+      size: 463
   bias_analysis:
     cmd: python src/bias_analysis.py
     deps:
     - path: models/baseline_a
       hash: md5
-      md5: 3a8add79a9e76f727dec81efe33a96c8.dir
-      size: 460360
+      md5: 96d1a82977393aee2c07489cbe4728df.dir
+      size: 460303
       nfiles: 2
     - path: models/bert_a
       hash: md5
@@ -144,7 +144,7 @@ stages:
     outs:
     - path: reports/bias_report.json
       hash: md5
-      md5: 43944891dc6c0fd2ffe15bf206127973
+      md5: 753be672e0db9a9ef325d3eec918d18d
       size: 5837
   train_baseline@${item}@a:
     cmd: python src/train_baseline.py a
@@ -159,12 +159,17 @@ stages:
       size: 392
     - path: src/train_baseline.py
       hash: md5
-      md5: ee5d5cd502af4d433b2ae4bfcf20cc1a
-      size: 2718
+      md5: f267f6c8a84435b2342da0af49b0ef89
+      size: 2770
     params:
       params.yaml:
         baseline:
           test_size: 0.2
+          random_state: 40
+          max_features: 10000
+          ngram_range:
+          - 1
+          - 2
         subtasks:
           a:
             column: subtask_a
@@ -191,8 +196,8 @@ stages:
     outs:
     - path: models/baseline_a
       hash: md5
-      md5: 3a8add79a9e76f727dec81efe33a96c8.dir
-      size: 460360
+      md5: 96d1a82977393aee2c07489cbe4728df.dir
+      size: 460303
       nfiles: 2
   train_baseline@${item}@b:
     cmd: python src/train_baseline.py b
@@ -207,12 +212,17 @@ stages:
       size: 392
     - path: src/train_baseline.py
       hash: md5
-      md5: ee5d5cd502af4d433b2ae4bfcf20cc1a
-      size: 2718
+      md5: f267f6c8a84435b2342da0af49b0ef89
+      size: 2770
     params:
       params.yaml:
         baseline:
           test_size: 0.2
+          random_state: 40
+          max_features: 10000
+          ngram_range:
+          - 1
+          - 2
         subtasks:
           a:
             column: subtask_a
@@ -239,8 +249,8 @@ stages:
     outs:
     - path: models/baseline_b
       hash: md5
-      md5: fb4868eeccfad939bb5f441342574d02.dir
-      size: 462564
+      md5: 3b908eedeb4e7245fda79fe1c97b59c4.dir
+      size: 462369
       nfiles: 2
   train_baseline@${item}@c:
     cmd: python src/train_baseline.py c
@@ -255,12 +265,17 @@ stages:
       size: 392
     - path: src/train_baseline.py
       hash: md5
-      md5: ee5d5cd502af4d433b2ae4bfcf20cc1a
-      size: 2718
+      md5: f267f6c8a84435b2342da0af49b0ef89
+      size: 2770
     params:
       params.yaml:
         baseline:
           test_size: 0.2
+          random_state: 40
+          max_features: 10000
+          ngram_range:
+          - 1
+          - 2
         subtasks:
           a:
             column: subtask_a
@@ -287,8 +302,8 @@ stages:
     outs:
     - path: models/baseline_c
       hash: md5
-      md5: 1d500e0be5ca131887735537d8fb5d9a.dir
-      size: 622885
+      md5: a31ac43438cbc0d1b670948c15c60a14.dir
+      size: 622552
       nfiles: 2
   train_lstm@${item}@a:
     cmd: python src/train_lstm.py a
@@ -647,8 +662,8 @@ stages:
       size: 1975156
     - path: models/baseline_a
       hash: md5
-      md5: 3a8add79a9e76f727dec81efe33a96c8.dir
-      size: 460360
+      md5: 96d1a82977393aee2c07489cbe4728df.dir
+      size: 460303
       nfiles: 2
     - path: models/bert_a
       hash: md5
@@ -679,7 +694,7 @@ stages:
     outs:
     - path: reports/faithfulness_a.json
       hash: md5
-      md5: cb730595ce4e4452cac62547ed46ac61
+      md5: 00eecd25cd75bae1f3f561e081280d3a
       size: 246
   faithfulness@${item}@b:
     cmd: python src/faithfulness.py b
@@ -690,8 +705,8 @@ stages:
       size: 1975156
     - path: models/baseline_b
       hash: md5
-      md5: fb4868eeccfad939bb5f441342574d02.dir
-      size: 462564
+      md5: 3b908eedeb4e7245fda79fe1c97b59c4.dir
+      size: 462369
       nfiles: 2
     - path: models/bert_b
       hash: md5
@@ -722,7 +737,7 @@ stages:
     outs:
     - path: reports/faithfulness_b.json
       hash: md5
-      md5: 439108557cb967e27e3b39f184df7480
+      md5: fec5d656b9f466077a76dec6a2bea0e7
       size: 246
   faithfulness@${item}@c:
     cmd: python src/faithfulness.py c
@@ -733,8 +748,8 @@ stages:
       size: 1975156
     - path: models/baseline_c
       hash: md5
-      md5: 1d500e0be5ca131887735537d8fb5d9a.dir
-      size: 622885
+      md5: a31ac43438cbc0d1b670948c15c60a14.dir
+      size: 622552
       nfiles: 2
     - path: models/bert_c
       hash: md5
@@ -765,7 +780,7 @@ stages:
     outs:
     - path: reports/faithfulness_c.json
       hash: md5
-      md5: ca0b799d956cffb9af189fd85d763d97
+      md5: cbf9266c382c431c756db9a5c2a180bc
       size: 246
   build_vector_store:
     cmd: python src/build_vector_store.py
