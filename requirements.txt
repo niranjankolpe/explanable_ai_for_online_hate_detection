@@ -32,6 +32,9 @@ sentence-transformers
 beautifulsoup4
 requests
 
+# AWS
+boto3
+
 # Live Streaming
 websockets
 
