@@ -1,15 +1,36 @@
 """
 monitor.py
 Logs predictions and detects label drift.
+
+Predictions are persisted to S3 (one object per prediction, under
+LOG_PREFIX) so the log survives ECS task redeploys — the local disk a
+Fargate task writes to is wiped on every deployment. If S3 is unreachable
+(e.g. no AWS credentials in local dev), falls back to the local LOG_FILE
+so the app and test suite keep working offline.
 """
 
 import json
 import os
+import uuid
 from datetime import datetime
 
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+
+LOG_BUCKET = os.environ.get(
+    "PREDICTION_LOG_BUCKET", "mys3bucketforhatedetectionproject")
+LOG_PREFIX = "prediction-logs/"
 LOG_FILE = "logs/predictions.log"
 DRIFT_THRESHOLD = 0.6
 WINDOW_SIZE = 20
+
+_s3 = boto3.client("s3", region_name="ap-south-1")
+
+
+def _log_local(entry: dict) -> None:
+    os.makedirs("logs", exist_ok=True)
+    with open(LOG_FILE, "a") as f:
+        f.write(json.dumps(entry) + "\n")
 
 
 def log_prediction(
@@ -17,7 +38,6 @@ def log_prediction(
         model: str,
         label: str,
         confidence: float) -> None:
-    os.makedirs("logs", exist_ok=True)
     entry = {
         "timestamp": datetime.now().isoformat(),
         "model": model,
@@ -25,11 +45,36 @@ def log_prediction(
         "label": label,
         "confidence": round(confidence, 4),
     }
-    with open(LOG_FILE, "a") as f:
-        f.write(json.dumps(entry) + "\n")
+    try:
+        key = f"{LOG_PREFIX}{entry['timestamp']}_{uuid.uuid4().hex}.json"
+        _s3.put_object(
+            Bucket=LOG_BUCKET,
+            Key=key,
+            Body=json.dumps(entry).encode("utf-8"),
+            ContentType="application/json",
+        )
+    except (BotoCoreError, ClientError):
+        _log_local(entry)
 
 
-def load_logs() -> list:
+def _load_s3_logs() -> list:
+    records = []
+    try:
+        paginator = _s3.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=LOG_BUCKET, Prefix=LOG_PREFIX):
+            for obj in page.get("Contents", []):
+                body = _s3.get_object(
+                    Bucket=LOG_BUCKET, Key=obj["Key"])["Body"].read()
+                try:
+                    records.append(json.loads(body))
+                except json.JSONDecodeError:
+                    continue
+    except (BotoCoreError, ClientError):
+        pass
+    return records
+
+
+def _load_local_logs() -> list:
     if not os.path.exists(LOG_FILE):
         return []
     records = []
@@ -41,6 +86,12 @@ def load_logs() -> list:
                     records.append(json.loads(line))
                 except json.JSONDecodeError:
                     continue
+    return records
+
+
+def load_logs() -> list:
+    records = _load_s3_logs() + _load_local_logs()
+    records.sort(key=lambda r: r.get("timestamp", ""))
     return records
 
 

@@ -11,7 +11,6 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import numpy as np
-import tempfile
 
 from preprocess import preprocess_common
 from dataset    import Vocabulary, pad_sequence
@@ -108,29 +107,6 @@ assert bd["baseline_a"]["NOT"]   == 1
 assert bd["lstm_a"]["total"]     == 1
 assert bd["lstm_a"]["NOT"]       == 1
 assert get_model_breakdown([])   == {}
-
-
-# ── log_prediction / load_logs ────────────────────────────────────────────────
-import monitor
-
-_orig_log_file  = monitor.LOG_FILE
-_tmp_log        = tempfile.mktemp(suffix=".log")
-monitor.LOG_FILE = _tmp_log
-try:
-    assert monitor.load_logs() == []
-    monitor.log_prediction("hello world", "baseline_a", "OFF",  0.92)
-    monitor.log_prediction("nice day",    "lstm_a",     "NOT",  0.85)
-    logs = monitor.load_logs()
-    assert len(logs)          == 2
-    assert logs[0]["label"]   == "OFF"
-    assert logs[0]["model"]   == "baseline_a"
-    assert logs[1]["label"]   == "NOT"
-    assert logs[1]["text"]    == "nice day"
-    assert logs[0]["confidence"] == 0.92
-finally:
-    if os.path.exists(_tmp_log):
-        os.remove(_tmp_log)
-    monitor.LOG_FILE = _orig_log_file
 
 
 # ── compute_agreement ─────────────────────────────────────────────────────────

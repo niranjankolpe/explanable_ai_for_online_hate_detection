@@ -16,6 +16,7 @@ sentence-transformers
 beautifulsoup4
 requests
 websockets
+boto3
 # transformers, crewai, crewai-tools DISABLED for demo (baseline-only; also had
 # a hard tokenizers version conflict: transformers==4.41.0 needs tokenizers<0.20,
 # crewai==1.14.7 needs tokenizers>=0.21 — unresolvable together)
