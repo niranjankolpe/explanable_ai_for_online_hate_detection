@@ -64,15 +64,7 @@ stages:
       - models/baseline_a
       - models/baseline_b
       - models/baseline_c
-      - models/lstm_a
-      - models/lstm_b
-      - models/lstm_c
-      - models/bert_a
-      - models/bert_b
-      - models/bert_c
     params:
-      - lstm
-      - bert
       - subtasks
     metrics:
       - reports/metrics.json
@@ -84,8 +76,6 @@ stages:
       - src/predict.py
       - src/preprocess.py
       - models/baseline_a
-      - models/lstm_a
-      - models/bert_a
     outs:
       - reports/bias_report.json
 
@@ -100,7 +90,5 @@ stages:
         - src/predict.py
         - src/preprocess.py
         - models/baseline_${item}
-        - models/lstm_${item}
-        - models/bert_${item}
       outs:
         - reports/faithfulness_${item}.json

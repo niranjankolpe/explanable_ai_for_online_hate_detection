@@ -5,53 +5,23 @@ stages:
     deps:
     - path: data
       hash: md5
-      md5: 634bec9e16d957481f808d7a66cb9d89.dir
-      size: 2201917
+      md5: 8dfe6c49634783f7929a7eb61850010b.dir
+      size: 2201936
       nfiles: 9
     - path: models/baseline_a
       hash: md5
-      md5: 8d4017d132a142aa75644182a6d91aaa.dir
+      md5: 55e00fd3b3dc16a3b5a1a89548f2fb24.dir
       size: 460303
       nfiles: 2
     - path: models/baseline_b
       hash: md5
-      md5: 813d51d7a4b596944c4712c440c78924.dir
+      md5: c1ee5de7319f86734254797e15424679.dir
       size: 462369
       nfiles: 2
     - path: models/baseline_c
       hash: md5
-      md5: 5762639bf434674bfee45765b2eee07a.dir
+      md5: dd0a3bd565a61b9a97129683edbf8801.dir
       size: 622552
-      nfiles: 2
-    - path: models/bert_a
-      hash: md5
-      md5: 43ddca2aec6567009a2f10574bdc4223.dir
-      size: 268545231
-      nfiles: 4
-    - path: models/bert_b
-      hash: md5
-      md5: 5d5f40af2a693ea35e51fde086094fbe.dir
-      size: 268545231
-      nfiles: 4
-    - path: models/bert_c
-      hash: md5
-      md5: 64acc98c58d0641bbcfa4b13d6118006.dir
-      size: 268548479
-      nfiles: 4
-    - path: models/lstm_a
-      hash: md5
-      md5: 0aff04895a41fd707ce953cf5cbfd51d.dir
-      size: 13221878
-      nfiles: 2
-    - path: models/lstm_b
-      hash: md5
-      md5: 3d1a2483f54b558964e46e2f74401545.dir
-      size: 9920218
-      nfiles: 2
-    - path: models/lstm_c
-      hash: md5
-      md5: 480af466b6596d0092a55e91c7d7f656.dir
-      size: 9494165
       nfiles: 2
     - path: src/evaluate.py
       hash: md5
@@ -67,22 +37,6 @@ stages:
       size: 392
     params:
       params.yaml:
-        bert:
-          batch_size: 32
-          epochs: 3
-          learning_rate: 2e-05
-          max_len: 128
-          model_name: distilbert-base-uncased
-        lstm:
-          batch_size: 128
-          dropout: 0.5
-          embedding_dim: 128
-          epochs: 15
-          hidden_dim: 128
-          learning_rate: 0.0005
-          max_len: 25
-          num_layers: 2
-          vocab_size: 20000
         subtasks:
           a:
             column: subtask_a
@@ -116,18 +70,8 @@ stages:
     deps:
     - path: models/baseline_a
       hash: md5
-      md5: 8d4017d132a142aa75644182a6d91aaa.dir
+      md5: 55e00fd3b3dc16a3b5a1a89548f2fb24.dir
       size: 460303
-      nfiles: 2
-    - path: models/bert_a
-      hash: md5
-      md5: 43ddca2aec6567009a2f10574bdc4223.dir
-      size: 268545231
-      nfiles: 4
-    - path: models/lstm_a
-      hash: md5
-      md5: 0aff04895a41fd707ce953cf5cbfd51d.dir
-      size: 13221878
       nfiles: 2
     - path: src/bias_analysis.py
       hash: md5
@@ -151,8 +95,8 @@ stages:
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
-      md5: e30696a3a1952db7da55c040ca23500e
-      size: 1975157
+      md5: 3dd7e843ef85394564a0c1bdf7b4244f
+      size: 1975176
     - path: src/preprocess.py
       hash: md5
       md5: f0bf8382251564047fba02dbd098ddcb
@@ -196,7 +140,7 @@ stages:
     outs:
     - path: models/baseline_a
       hash: md5
-      md5: 8d4017d132a142aa75644182a6d91aaa.dir
+      md5: 55e00fd3b3dc16a3b5a1a89548f2fb24.dir
       size: 460303
       nfiles: 2
   train_baseline@${item}@b:
@@ -204,8 +148,8 @@ stages:
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
-      md5: e30696a3a1952db7da55c040ca23500e
-      size: 1975157
+      md5: 3dd7e843ef85394564a0c1bdf7b4244f
+      size: 1975176
     - path: src/preprocess.py
       hash: md5
       md5: f0bf8382251564047fba02dbd098ddcb
@@ -249,7 +193,7 @@ stages:
     outs:
     - path: models/baseline_b
       hash: md5
-      md5: 813d51d7a4b596944c4712c440c78924.dir
+      md5: c1ee5de7319f86734254797e15424679.dir
       size: 462369
       nfiles: 2
   train_baseline@${item}@c:
@@ -257,8 +201,8 @@ stages:
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
-      md5: e30696a3a1952db7da55c040ca23500e
-      size: 1975157
+      md5: 3dd7e843ef85394564a0c1bdf7b4244f
+      size: 1975176
     - path: src/preprocess.py
       hash: md5
       md5: f0bf8382251564047fba02dbd098ddcb
@@ -302,7 +246,7 @@ stages:
     outs:
     - path: models/baseline_c
       hash: md5
-      md5: 5762639bf434674bfee45765b2eee07a.dir
+      md5: dd0a3bd565a61b9a97129683edbf8801.dir
       size: 622552
       nfiles: 2
   train_lstm@${item}@a:
@@ -658,22 +602,12 @@ stages:
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
-      md5: e30696a3a1952db7da55c040ca23500e
-      size: 1975157
+      md5: 3dd7e843ef85394564a0c1bdf7b4244f
+      size: 1975176
     - path: models/baseline_a
       hash: md5
-      md5: 8d4017d132a142aa75644182a6d91aaa.dir
+      md5: 55e00fd3b3dc16a3b5a1a89548f2fb24.dir
       size: 460303
-      nfiles: 2
-    - path: models/bert_a
-      hash: md5
-      md5: 43ddca2aec6567009a2f10574bdc4223.dir
-      size: 268545231
-      nfiles: 4
-    - path: models/lstm_a
-      hash: md5
-      md5: 0aff04895a41fd707ce953cf5cbfd51d.dir
-      size: 13221878
       nfiles: 2
     - path: src/explain.py
       hash: md5
@@ -694,29 +628,19 @@ stages:
     outs:
     - path: reports/faithfulness_a.json
       hash: md5
-      md5: 00eecd25cd75bae1f3f561e081280d3a
-      size: 246
+      md5: b8f8ac2ae8ef5a72cde95b049bbb747a
+      size: 245
   faithfulness@${item}@b:
     cmd: python src/faithfulness.py b
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
-      md5: e30696a3a1952db7da55c040ca23500e
-      size: 1975157
+      md5: 3dd7e843ef85394564a0c1bdf7b4244f
+      size: 1975176
     - path: models/baseline_b
       hash: md5
-      md5: 813d51d7a4b596944c4712c440c78924.dir
+      md5: c1ee5de7319f86734254797e15424679.dir
       size: 462369
-      nfiles: 2
-    - path: models/bert_b
-      hash: md5
-      md5: 5d5f40af2a693ea35e51fde086094fbe.dir
-      size: 268545231
-      nfiles: 4
-    - path: models/lstm_b
-      hash: md5
-      md5: 3d1a2483f54b558964e46e2f74401545.dir
-      size: 9920218
       nfiles: 2
     - path: src/explain.py
       hash: md5
@@ -737,29 +661,19 @@ stages:
     outs:
     - path: reports/faithfulness_b.json
       hash: md5
-      md5: 439108557cb967e27e3b39f184df7480
+      md5: 49c256f7e5685e9a04bc57e147900801
       size: 246
   faithfulness@${item}@c:
     cmd: python src/faithfulness.py c
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
-      md5: e30696a3a1952db7da55c040ca23500e
-      size: 1975157
+      md5: 3dd7e843ef85394564a0c1bdf7b4244f
+      size: 1975176
     - path: models/baseline_c
       hash: md5
-      md5: 5762639bf434674bfee45765b2eee07a.dir
+      md5: dd0a3bd565a61b9a97129683edbf8801.dir
       size: 622552
-      nfiles: 2
-    - path: models/bert_c
-      hash: md5
-      md5: 64acc98c58d0641bbcfa4b13d6118006.dir
-      size: 268548479
-      nfiles: 4
-    - path: models/lstm_c
-      hash: md5
-      md5: 480af466b6596d0092a55e91c7d7f656.dir
-      size: 9494165
       nfiles: 2
     - path: src/explain.py
       hash: md5
@@ -780,15 +694,15 @@ stages:
     outs:
     - path: reports/faithfulness_c.json
       hash: md5
-      md5: 378b9d46caa347dd819ef04827776dff
+      md5: 5cb57fc2db429ff394a0c7b318e77b6d
       size: 246
   build_vector_store:
     cmd: python src/build_vector_store.py
     deps:
     - path: data/olid-training-v1.0.tsv
       hash: md5
-      md5: e30696a3a1952db7da55c040ca23500e
-      size: 1975157
+      md5: 3dd7e843ef85394564a0c1bdf7b4244f
+      size: 1975176
     - path: src/build_vector_store.py
       hash: md5
       md5: a7c7e257cc5c0df17c3c125551f6547a
@@ -800,6 +714,6 @@ stages:
     outs:
     - path: models/chroma_store
       hash: md5
-      md5: 2e4355f831c63c753154223d56b2e0ba.dir
-      size: 43481244
+      md5: 1058e7f7d92487a0cd4d895b3f22cea5.dir
+      size: 43501724
       nfiles: 6

@@ -54,7 +54,8 @@ available_models = ["baseline"]
 if os.path.exists("models/llama3.2_3b_lora_hate_speech"):
     available_models.append("llama")
 
-st.title("Explainable AI for Offensive Language Detection")
+st.markdown("<style>.stApp { background-color: #F5F0FF; }</style>", unsafe_allow_html=True)
+st.title("Offensive Language Detection")
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
     ["Prediction", "Explanation", "RAG Explainer", "Bias Analysis", "Data Collection", "Monitoring", "Live Stream Moderation", "Agentic Analysis"]
